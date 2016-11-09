@@ -1,4 +1,34 @@
 # FunRobo2016
 Code base for the Mystery Machine autonomous race vehicle
-We rock
-I hope I dont break everything
+
+---
+
+## Project Description
+TODO
+
+---
+
+## Run Instructions for Current Capabilities
+### HW 3 Demo
+
+The homework 3 demo can:
+
+* Use the LIDAR to detect obstacles in front of the robot and slow or stop in response
+* Use the GPS to find the robot's location in reference to a waypoint and command the robot to turn toward the waypoint
+* Use rosserial to pass messages on the /cmd_vel topic from the Midbrain Arbiter (compiles the command velocities from the previous two functions) to the Arduino to move the motors
+
+**To launch this demo run:**
+
+`roslaunch mystery_machine hw3demo.launch`
+
+### LIDAR Visualization
+
+**To initialize and visualize the LIDAR scans run:**
+
+`sudo chmod a+rw /dev/ttyACM0`
+
+`rosrun hokuyo_node hokuyo_node /dev/ttyACM0`
+
+`rosrun rviz rviz`
+
+Add a LaserScan and set the topic to /scan.  Change fixed frame from map to laser.
