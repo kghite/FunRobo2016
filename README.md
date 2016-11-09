@@ -23,12 +23,20 @@ The homework 3 demo can:
 
 ### LIDAR Visualization
 
-**To initialize and visualize the LIDAR scans run:**
+**To initialize and visualize the LIDAR scans on /scan run:**
 
-`sudo chmod a+rw /dev/ttyACM0`
+`sudo chmod a+rw /dev/ttyACM1`
 
-`rosrun hokuyo_node hokuyo_node /dev/ttyACM0`
+`rosrun hokuyo_node hokuyo_node /dev/ttyACM1`
 
 `rosrun rviz rviz`
 
 Add a LaserScan and set the topic to /scan.  Change fixed frame from map to laser.
+
+### GPS Feed
+
+**To start the GPS feed on /fix run:**
+
+`sudo chmod a+rw /dev/ttyACM0`
+
+`rosrun nmea_navsat_driver nmea_serial_driver _port:=/dev/ttyACM0 _baud:=115200`
