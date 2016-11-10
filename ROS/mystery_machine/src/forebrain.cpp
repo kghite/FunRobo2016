@@ -13,6 +13,7 @@
 
 sensor_msgs::NavSatFix gps_pos;
 geometry_msgs::Vector3Stamped imu_mag;
+std_msgs::Int16MultiArray cmd_array;
 
 void turnToGoal(const sensor_msgs::NavSatFix goal_arr)
 {
@@ -31,7 +32,11 @@ void turnToGoal(const sensor_msgs::NavSatFix goal_arr)
 
   // Calculate angle from goal waypoint
 
+  // Translate to array for arbiter (set cmd_array)
+  
+
   // DEBUG
+  ROS_INFO("Received Goal");
   ROS_INFO("Waypoint lat: %f", goal_lat);
   ROS_INFO("Waypoint long: %f", goal_long);
   ROS_INFO("GPS lat: %f", gps_lat);
@@ -39,6 +44,7 @@ void turnToGoal(const sensor_msgs::NavSatFix goal_arr)
   ROS_INFO("IMU Mag X: %f", imu_mag_x);
   ROS_INFO("IMU Mag Y: %f", imu_mag_y);
   ROS_INFO("IMU Mag Z: %f", imu_mag_z);
+  ROS_INFO("Publishing Output");
 }
 
 void getGPS(const sensor_msgs::NavSatFix gps) 
@@ -63,6 +69,10 @@ int main(int argc, char **argv)
   ros::Subscriber sub_gps = n.subscribe("fix", 1000, getGPS);
 
   ros::Subscriber sub_imu = n.subscribe("imu/mag", 1000, getIMU);
+
+  ros::Publisher pub_arb = n.advertise<std_msgs::Int16MultiArray>("wpt/cmd_vel", 1000);
+
+  pub_arb.publish(cmd_array);
 
   ros::spin();
 
