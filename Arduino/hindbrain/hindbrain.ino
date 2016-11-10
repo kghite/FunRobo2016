@@ -40,7 +40,6 @@ ros::Publisher chatter("chatter", &str_msg);
 int linear_vel = 0;
 int angular_vel = 0;
 String notification;
-char charBuf[20];
 byte hindbrain_stopped = 0; //Check for estop from hindbrain
 byte midbrain_stopped  = 0; //Check for estop from midbrain
 
@@ -57,11 +56,7 @@ void twistCb( const geometry_msgs::Twist& twist_input ){
   notification += "Linear vel: " + String(linear_vel) + "\n";
   notification += "Angular vel: " + String(angular_vel);
   
-  //Ros str_msg needs an array of characters, not a String
-  notification.toCharArray(charBuf,100);
-  
-  str_msg.data = charBuf;
-  chatter.publish( &str_msg );
+  chat(notification);
 }
 
 ros::Subscriber<geometry_msgs::Twist> sub("cmd_vel", &twistCb );
@@ -109,6 +104,9 @@ void loop(){
     blink();
     
     update_motors();
+    
+    //Useful to make sure rosserial is working
+    //chat(String("Alive!"));
   }
   
   //Act: Run actuators and behavior lights
@@ -117,11 +115,7 @@ void loop(){
   if(hindbrain_stopped || midbrain_stopped) //If there's an estop, say so and stop the motors
   {
     notification = "Hindbrain has stopped";
-    
-    notification.toCharArray(charBuf,100);
-    
-    str_msg.data = charBuf;
-    chatter.publish( &str_msg );
+    chat(notification);
     
     //Stop the motors!
     motor_stop();
@@ -133,6 +127,14 @@ void loop(){
 }
 
 // Hindbrain Helper Functions******************************************************************************
+
+//Writes a String message to the /chatter topic
+void chat(String message){
+  char charBuf[100];
+  message.toCharArray(charBuf,100);    
+  str_msg.data = charBuf;
+  chatter.publish( &str_msg );
+}
 
 //Update motor speeds
 void update_motors(){
