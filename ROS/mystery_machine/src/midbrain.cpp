@@ -31,15 +31,14 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
   }
 
   // Calculate output array using some portion of scan
-  ROS_INFO("Forward distance: %f", scan.ranges[340]);
-  if (scan.ranges[256] < .5)
+  double forward_distance = scan.ranges[256];
+  ROS_INFO("Forward distance: %f", forward_distance);
+  cmd_array.data.at(0) = forward_distance;
+  if (cmd_array.data.at(0) < 0)
   {
-    cmd_array.data[0] = 1;
+    cmd_array.data.at(0) = 0;
   }
-  else
-  {
-    cmd_array.data[0] = 0;
-  }
+  ROS_INFO("%d", cmd_array.data.at(0));
 
   // DEBUG
   ROS_INFO("Publishing Output");
@@ -48,6 +47,7 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
 
 int main(int argc, char **argv)
 {
+  cmd_array.data.push_back(0);
 
   ros::init(argc, argv, "midbrain");
 
@@ -57,10 +57,6 @@ int main(int argc, char **argv)
 
   ros::Publisher pub_arb = n.advertise<std_msgs::Int16MultiArray>("wpt/cmd_vel", 1000);
 
-  for (int i = 0; i < sizeof(cmd_array.data) / sizeof(cmd_array.data[0]); i++)
-  {
-    ROS_INFO("%d", cmd_array.data[i]);
-  }
   pub_arb.publish(cmd_array);
 
   ros::spin();
