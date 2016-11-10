@@ -11,3 +11,6 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 
 add_executable(forebrain src/forebrain.cpp)
 target_link_libraries(forebrain ${catkin_LIBRARIES})
+
+add_executable(midbrain src/midbrain.cpp)
+target_link_libraries(midbrain ${catkin_LIBRARIES})

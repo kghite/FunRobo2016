@@ -17,6 +17,9 @@ std_msgs::Int16MultiArray cmd_array;
 
 void turnToGoal(const sensor_msgs::NavSatFix goal_arr)
 {
+  // DEBUG
+  ROS_INFO("Received Goal");
+
   // Break down lat and long of goal waypoint
   float goal_lat = goal_arr.latitude;
   float goal_long = goal_arr.longitude;
@@ -36,7 +39,6 @@ void turnToGoal(const sensor_msgs::NavSatFix goal_arr)
   
 
   // DEBUG
-  ROS_INFO("Received Goal");
   ROS_INFO("Waypoint lat: %f", goal_lat);
   ROS_INFO("Waypoint long: %f", goal_long);
   ROS_INFO("GPS lat: %f", gps_lat);
