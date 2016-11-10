@@ -9,11 +9,5 @@ catkin_package()
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
-add_executable(talk src/talker.cpp)
-target_link_libraries(talk ${catkin_LIBRARIES})
-
-add_executable(listen src/listener.cpp)
-target_link_libraries(listen ${catkin_LIBRARIES})
-
-add_executable(fact src/factor.cpp)
-target_link_libraries(fact ${catkin_LIBRARIES})
+add_executable(forebrain src/forebrain.cpp)
+target_link_libraries(forebrain ${catkin_LIBRARIES})
