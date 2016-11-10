@@ -41,6 +41,12 @@ Add a LaserScan and set the topic to /scan.  Change fixed frame from map to lase
 
 `rosrun nmea_navsat_driver nmea_serial_driver _port:=/dev/ttyACM0 _baud:=115200`
 
+### Rosserial
+
+If the Arduino is running, it will listen for /cmd_vel.
+
+`rosrun rosserial_python serial_node.py /dev/ttyUSB0`
+
 ### Forebrain Controller
 We need to write a launch file for this probably
 
