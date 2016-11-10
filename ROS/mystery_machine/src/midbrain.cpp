@@ -12,6 +12,9 @@
 
 sensor_msgs::LaserScan scan;
 std_msgs::Int16MultiArray cmd_array;
+int backward[11] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0};
+int stop[11] =     {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0};
+int forward[11] =  {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0};
 
 void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
 {
@@ -35,11 +38,18 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
   ROS_INFO("Forward distance: %f", forward_distance);
   if (forward_distance < .5)
   {
-    cmd_array.data.at(0) = 0;
+    // Move backward
+    cmd_array.data.assign(&backward[0], &backward[0]+11);
+  }
+  else if (forward_distance < 1)
+  {
+    // Stop
+    cmd_array.data.assign(&stop[0], &stop[0]+11);
   }
   else
   {
-    cmd_array.data.at(0) = forward_distance;
+    // Move forward
+    cmd_array.data.assign(&forward[0], &forward[0]+11);
   }
   ROS_INFO("%d", cmd_array.data.at(0));
 
@@ -50,7 +60,7 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
 
 int main(int argc, char **argv)
 {
-  cmd_array.data.push_back(0);
+  cmd_array.data.assign(&stop[0], &stop[0]+11);
 
   ros::init(argc, argv, "midbrain");
 
