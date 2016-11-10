@@ -9,6 +9,12 @@ TODO
 ---
 
 ## Run Instructions for Current Capabilities
+### Updating submodules
+
+The funrobo_robot and phiget_drivers directories are independent git repositories. In order to update them, run:
+
+`git submodule init && git submodule update`
+
 ### HW 3 Demo
 
 The homework 3 demo can:
