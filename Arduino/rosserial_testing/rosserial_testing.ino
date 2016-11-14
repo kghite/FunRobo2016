@@ -8,13 +8,15 @@ std_msgs::String str_msg;
 ros::Publisher chatter("chatter", &str_msg);
 
 void messageCb( const geometry_msgs::Twist& twist_input ){
-  float linear_vel  = twist_input.linear.x;
-  float angular_vel = twist_input.angular.z;
+  int linear_vel  = twist_input.linear.x *1000;
+  int angular_vel = twist_input.angular.z * 1000;
   
-  twist_notification = String(linear_vel);
+  String twist_notification = String(linear_vel);
   twist_notification += ", " + String(angular_vel);
   
-  str_msg.data = twist_notification;
+  char charBuf[100];
+  twist_notification.toCharArray(charBuf,100);    
+  str_msg.data = charBuf;
   chatter.publish( &str_msg );
 }
 
