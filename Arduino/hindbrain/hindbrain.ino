@@ -17,15 +17,16 @@ Adafruit_NeoPixel right_strip = Adafruit_NeoPixel(8, RIGHT_STRIP,NEO_GRBW + NEO_
 Adafruit_NeoPixel left_ring = Adafruit_NeoPixel(12, LEFT_RING,NEO_GRBW + NEO_KHZ800);
 Adafruit_NeoPixel right_ring = Adafruit_NeoPixel(12, RIGHT_RING,NEO_GRBW + NEO_KHZ800);
 
-uint32_t white = left_strip.Color(0,0,0,128);
-uint32_t red   = left_strip.Color(128,0,0,0);
+uint32_t white = left_strip.Color(0,0,0,255);
+uint32_t yellow= left_strip.Color(255,128,0);
+uint32_t red   = left_strip.Color(255,0,0,0);
 uint32_t off   = left_strip.Color(0,0,0,0);
 
 //Variables for blink timing.
 unsigned long current_time;
 unsigned long blink_time;
 byte blinked = 0;
-const int delay_period = 500; //Blinking speed for alive light
+int delay_period = 500; //Blinking speed for alive light
 char command = 'g'; //Command from midbrain
 
 //Pins and servo objects for Roboclaw control
@@ -47,6 +48,15 @@ int angular_vel = 0;
 String notification;
 byte hindbrain_stopped = 0; //Check for estop from hindbrain
 byte midbrain_stopped  = 0; //Check for estop from midbrain
+
+//Define estop pin
+const byte ESTOP_PIN = 42;
+
+//Define LIDAR tilt servo
+const byte TILT_PIN = 8;
+Servo tilt_servo;
+const int middle_tilt_position = 110;
+int current_tilt_position = middle_tilt_position;
 
 //Callback function for a Twist message TCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCbTCb
 void twistCb( const geometry_msgs::Twist& twist_input ){
@@ -82,10 +92,10 @@ void setup(){
   left_ring.show();
   right_ring.show();
   
-  left_strip.setBrightness(32);
-  right_strip.setBrightness(32);
-  left_ring.setBrightness(32);
-  right_ring.setBrightness(32);
+  //left_strip.setBrightness(128);
+  //right_strip.setBrightness(128);
+  //left_ring.setBrightness(128);
+  //right_ring.setBrightness(128);
   
   //Attach Servo objects to correct pins
   forward_channel.attach(FORWARD_PIN);
@@ -102,6 +112,10 @@ void setup(){
   //Initialize timing things
   current_time = millis();
   blink_time   = millis();
+  
+  pinMode(ESTOP_PIN,INPUT);
+  
+  tilt_servo.attach(TILT_PIN);
 }
 
 //Run hindbrain loop until commanded to stop LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
@@ -119,12 +133,18 @@ void loop(){
   //Sense: Read robot sensors
   
   //Think: Run low level cognition and safety code
+  if(digitalRead(ESTOP_PIN))
+    delay_period = 500;
+  else{
+    delay_period = 250;
+    chat("Physical estop pressed");
+  }
+  
+  //Act: Run actuators and behavior lights
   if(!hindbrain_stopped && !midbrain_stopped) //If there's an estop, don't go
   {
     blink();
   }
-  
-  //Act: Run actuators and behavior lights
   
   //Write status data up to midbrain
   if(hindbrain_stopped || midbrain_stopped) //If there's an estop, say so and stop the motors
@@ -174,12 +194,22 @@ void blink(){
     if(blinked){
       if (linear_vel == 0 && angular_vel == 0)
         change_all_colors(red);
-      else if (angular_vel > -0.05 && angular_vel < 0) //turning left
-        change_left_colors(white);
-      else if (angular_vel < 0.05 && angular_vel > 0) //turning right
-        change_right_colors(white);
-      else
+      else if (angular_vel < -5){ //turning left
+        if(linear_vel>0)
+          change_left_colors(white);
+        else
+          change_right_colors(yellow);
+      }
+      else if (angular_vel > 5){ //turning right
+        if(linear_vel>0)
+          change_right_colors(white);
+        else
+          change_left_colors(yellow);
+      }
+      else if (linear_vel > 0)
         change_all_colors(white);
+      else
+        change_all_colors(yellow);
     }
     else
       change_all_colors(off);
