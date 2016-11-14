@@ -1,0 +1,6 @@
+[submodule "ROS/funrobo_robot"]
+	path = ROS/funrobo_robot
+	url = https://github.com/Olin-FunRobo/funrobo_robot
+[submodule "ROS/phidgets_drivers"]
+	path = ROS/phidgets_drivers
+	url = https://github.com/ccny-ros-pkg/phidgets_drivers.git

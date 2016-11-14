@@ -9,6 +9,12 @@ TODO
 ---
 
 ## Run Instructions for Current Capabilities
+### Updating submodules
+
+The funrobo_robot and phiget_drivers directories are independent git repositories. In order to update them, run:
+
+`git submodule init && git submodule update`
+
 ### HW 3 Demo
 
 The homework 3 demo can:
@@ -40,6 +46,12 @@ Add a LaserScan and set the topic to /scan.  Change fixed frame from map to lase
 `sudo chmod a+rw /dev/ttyACM0`
 
 `rosrun nmea_navsat_driver nmea_serial_driver _port:=/dev/ttyACM0 _baud:=115200`
+
+### Rosserial
+
+If the Arduino is running, it will listen for /cmd_vel.
+
+`rosrun rosserial_python serial_node.py /dev/ttyUSB0`
 
 ### Forebrain Controller
 We need to write a launch file for this probably

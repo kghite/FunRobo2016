@@ -10,8 +10,15 @@
 #include "std_msgs/Int16.h"
 #include "std_msgs/Int16MultiArray.h"
 
+ros::Publisher *pub_arb;
 sensor_msgs::LaserScan scan;
 std_msgs::Int16MultiArray cmd_array;
+int backward[22] = {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int stop[22] =     {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int forward[22] =  {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
 {
@@ -35,13 +42,26 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
   ROS_INFO("Forward distance: %f", forward_distance);
   if (forward_distance < .5)
   {
-    cmd_array.data.at(0) = 0;
+    // Move backward
+    cmd_array.data.assign(&backward[0], &backward[0]+22);
+  }
+  else if (forward_distance < 1)
+  {
+    // Stop
+    cmd_array.data.assign(&stop[0], &stop[0]+22);
   }
   else
   {
-    cmd_array.data.at(0) = forward_distance;
+    // Move forward
+    cmd_array.data.assign(&forward[0], &forward[0]+22);
   }
-  ROS_INFO("%d", cmd_array.data.at(0));
+
+  for (int i=0; i<sizeof(cmd_array.data)/sizeof(cmd_array.data[0])-1; i++)
+  {
+    ROS_INFO("%d, ", cmd_array.data.at(i));
+  }
+
+  pub_arb->publish(cmd_array);
 
   // DEBUG
   ROS_INFO("Publishing Output");
@@ -50,7 +70,7 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
 
 int main(int argc, char **argv)
 {
-  cmd_array.data.push_back(0);
+  cmd_array.data.assign(&stop[0], &stop[0]+11);
 
   ros::init(argc, argv, "midbrain");
 
@@ -58,9 +78,7 @@ int main(int argc, char **argv)
 
   ros::Subscriber sub_imu = n.subscribe("/scan", 1000, controlSpeed);
 
-  ros::Publisher pub_arb = n.advertise<std_msgs::Int16MultiArray>("wpt/cmd_vel", 1000);
-
-  pub_arb.publish(cmd_array);
+  pub_arb = new ros::Publisher(n.advertise<std_msgs::Int16MultiArray>("obst/cmd_vel", 1000));
 
   ros::spin();
 
