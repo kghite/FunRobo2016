@@ -27,6 +27,12 @@ The homework 3 demo can:
 
 `roslaunch mystery_machine hw3demo.launch`
 
+### SSH Into the ODROID
+
+`ssh odroid@192.168.16.68`
+
+Run `./setup` in the utils folder to set up the correct ports and permissions
+
 ### LIDAR Visualization
 
 **To initialize and visualize the LIDAR scans on /scan run:**
