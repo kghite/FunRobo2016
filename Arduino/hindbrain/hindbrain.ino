@@ -1,5 +1,7 @@
+#include <known_16bit_timers.h>
+#include <Adafruit_TiCoServo.h>
+
 #include <Adafruit_NeoPixel.h>
-#include <Servo.h>
 #include <ros.h>
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/String.h>
@@ -7,10 +9,10 @@
 //Set up ports and pins to support robot
 
 //Setup for all the neoPixels
-const byte LEFT_STRIP  = 2;
-const byte RIGHT_STRIP = 3;
-const byte LEFT_RING   = 4;
-const byte RIGHT_RING  = 5;
+const byte LEFT_STRIP  = 3;
+const byte RIGHT_STRIP = 2;
+const byte LEFT_RING   = 5;
+const byte RIGHT_RING  = 4;
 
 Adafruit_NeoPixel left_strip = Adafruit_NeoPixel(8, LEFT_STRIP,NEO_GRBW + NEO_KHZ800);
 Adafruit_NeoPixel right_strip = Adafruit_NeoPixel(8, RIGHT_STRIP,NEO_GRBW + NEO_KHZ800);
@@ -33,8 +35,8 @@ char command = 'g'; //Command from midbrain
 const byte FORWARD_PIN = 6;
 const byte TURN_PIN = 7;
 
-Servo forward_channel;
-Servo turn_channel;
+Adafruit_TiCoServo forward_channel;
+Adafruit_TiCoServo turn_channel;
 
 //Set up ROS node handling and feedback channel
 ros::NodeHandle nh;
@@ -54,7 +56,7 @@ const byte ESTOP_PIN = 42;
 
 //Define LIDAR tilt servo
 const byte TILT_PIN = 8;
-Servo tilt_servo;
+Adafruit_TiCoServo tilt_servo;
 const int middle_tilt_position = 110;
 int current_tilt_position = middle_tilt_position;
 
@@ -62,9 +64,11 @@ int current_tilt_position = middle_tilt_position;
 void twistCb( const geometry_msgs::Twist& twist_input ){
   
   //Extract velocity data
-  //Multiply by 1000 to maintain resolution
-  linear_vel  = int(1000 * twist_input.linear.x);
-  angular_vel = int(1000 * twist_input.angular.z);
+  //Multiply by 90 to maintain resolution
+  //Ends up giving a signal for write between 0-180
+  //Make sure cmd_vel has values that range -1 to 1
+  linear_vel  = int(90 * twist_input.linear.x);
+  angular_vel = int(90 * twist_input.angular.z);
   
   //Set motor speeds based on new command
   update_motors();
@@ -115,7 +119,7 @@ void setup(){
   
   pinMode(ESTOP_PIN,INPUT);
   
-  tilt_servo.attach(TILT_PIN);
+  //tilt_servo.attach(TILT_PIN);
 }
 
 //Run hindbrain loop until commanded to stop LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
@@ -173,14 +177,14 @@ void chat(String message){
 
 //Update motor speeds
 void update_motors(){
-  forward_channel.writeMicroseconds(1500 - linear_vel);
-  turn_channel.writeMicroseconds(1500 - angular_vel);
+  forward_channel.write(90 - linear_vel);
+  turn_channel.write(90 - angular_vel);
 }
 
 //Stop motors
 void motor_stop(){
-  forward_channel.writeMicroseconds(1500);
-  turn_channel.writeMicroseconds(1500);
+  forward_channel.write(90);
+  turn_channel.write(90);
 }
 
 //Blink all NeoPixels on and off
@@ -194,19 +198,19 @@ void blink(){
     if(blinked){
       if (linear_vel == 0 && angular_vel == 0)
         change_all_colors(red);
-      else if (angular_vel < -5){ //turning left
-        if(linear_vel>0)
+      else if (angular_vel < -3){ //turning left
+        if(linear_vel>=0)
           change_left_colors(white);
-        else
-          change_right_colors(yellow);
-      }
-      else if (angular_vel > 5){ //turning right
-        if(linear_vel>0)
-          change_right_colors(white);
         else
           change_left_colors(yellow);
       }
-      else if (linear_vel > 0)
+      else if (angular_vel > 3){ //turning right
+        if(linear_vel>=0)
+          change_right_colors(white);
+        else
+          change_right_colors(yellow);
+      }
+      else if (linear_vel >= 0)
         change_all_colors(white);
       else
         change_all_colors(yellow);
