@@ -47,11 +47,27 @@ Add a LaserScan and set the topic to /scan.  Change fixed frame from map to lase
 
 `rosrun nmea_navsat_driver nmea_serial_driver _port:=/dev/ttyACM0 _baud:=115200`
 
+### IMU Feed
+
+**To start the imu feed run:**
+
+`rosrun phidgets_imu phidgets_imu_node`
+
+### Camera Feed
+
+**To start the camera feed run:**
+
+rosrun uvc_camera uvc_camera_node _device:="/dev/video0"
+
 ### Rosserial
 
 If the Arduino is running, it will listen for /cmd_vel.
 
 `rosrun rosserial_python serial_node.py /dev/ttyUSB0`
+
+### Teleop Mode
+
+`rosrun teleop_twist_keyboard teleop_twist_keyboard.py`
 
 ### Forebrain Controller
 We need to write a launch file for this probably
