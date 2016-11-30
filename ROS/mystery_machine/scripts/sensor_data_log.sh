@@ -1,3 +1,7 @@
 #!/bin/bash
 
-Run the data_log.launch file in the mystery machine package
+echo "Starting sensors"
+roslaunch mystery_machine data_log.launch
+
+echo "Starting bag file"
+gnome-terminal -e rosbag record -a

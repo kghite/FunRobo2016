@@ -1,18 +1,23 @@
 <launch>
 
 	<!-- Laser -->
-	<node name="hokuyo_node" pkg="hokuyo_node" type="hokuyo_node" args="/dev/hokuyo" />
+	<node pkg="hokuyo_node" type="hokuyo_node" name="hokuyo_node" args="/dev/hokuyo" />
 
 	<!-- IMU -->
-	<node name="phidgets_imu_node" pkg="phidgets_imu" type="phidgets_imu_node" />
+	<node pkg="phidgets_imu" type="phidgets_imu_node" name="phidgets_imu_node"/>
 
 	<!-- GPS -->
-	<node name="nmea_serial_driver" pkg="nmea_navsat_driver" type="nmea_serial_driver" />
+	<node pkg="nmea_navsat_driver" type="nmea_serial_driver" name="nmea_serial_driver">
+		<param name="_port" value="/dev/gps" />
+		<param name="_baud" value="115200" />
+	</node>
 
 	<!-- Camera -->
-	<node name="uvc_camera_node" pkg="uvc_camera" type="uvc_camera_node" args="/dev/ttyACM0" />
+	<node pkg="uvc_camera" type="uvc_camera_node" name="uvc_camera_node">
+		<param name="_device" value="/dev/camera"/>
+	</node>
 
 	<!-- Rosserial -->
-	<node name="serial_node.py" pkg="rosserial_python" type="serial_node.py" args="/dev/arduino" />
+	<node pkg="rosserial_python" type="serial_node.py" name="serial_node.py" args="/dev/arduino" />
 
 </launch>

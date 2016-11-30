@@ -1,3 +1,4 @@
 #!/bin/bash
 
-Run teleop.launch in the mystery_machine package
+echo "Beginning Telop Mode"
+roslaunch mystery_machine teleop.launch
