@@ -1,11 +1,11 @@
-#include <known_16bit_timers.h>
-#include <Adafruit_TiCoServo.h>
-
 #include <Adafruit_NeoPixel.h>
 #include <ros.h>
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Int16.h>
+
+#include <known_16bit_timers.h>
+#include <Adafruit_TiCoServo.h>
 
 //Set up ports and pins to support robot
 
@@ -58,7 +58,7 @@ std_msgs::Int16 int_msg;
 ros::Publisher ir_estop_publisher("ir_estop",&int_msg);
 
 //Various variables for ROS workings
-int linear_vel = 0;
+int linear_vel =  0;
 int angular_vel = 0;
 String notification;
 byte hindbrain_stopped = 0; //Check for estop from hindbrain
@@ -130,7 +130,7 @@ void setup(){
   turn_channel.attach(TURN_PIN);
   
   //Make sure the motors aren't moving
-  motor_stop();
+  //update_motors();
   
   //Initialize ROS topics
   nh.initNode();
@@ -178,6 +178,7 @@ void loop(){
     blink();
     
     tilt_servo.write(current_tilt_position);
+    
     update_motors();
   }
   
@@ -210,7 +211,8 @@ void chat(String message){
 void update_motors(){
   //The ir_estop is the only estop the Arduino has to tell itself to stop via software
   if (ir_estop == 1){
-    motor_stop();
+   forward_channel.write(90);
+    turn_channel.write(90);
   }
   else{
     forward_channel.write(90 - linear_vel);
