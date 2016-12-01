@@ -5,6 +5,7 @@
 #include <ros.h>
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/String.h>
+#include <std_msgs/Int16.h>
 
 //Set up ports and pins to support robot
 
@@ -38,21 +39,31 @@ const byte TURN_PIN = 7;
 Adafruit_TiCoServo forward_channel;
 Adafruit_TiCoServo turn_channel;
 
+//Define estop pin
+const byte ESTOP_PIN = 42;
+
+//Define IR sensor variables
+const byte IR_PIN_1 = A0;
+const byte IR_PIN_2 = A1;
+const int ir_threshold = 450;
+int ir_estop = 0;
+
 //Set up ROS node handling and feedback channel
 ros::NodeHandle nh;
 
 std_msgs::String str_msg;
 ros::Publisher chatter("chatter", &str_msg);
 
-//Various cariables for ROS workings
+std_msgs::Int16 int_msg;
+ros::Publisher ir_estop_publisher("ir_estop",&int_msg);
+
+//Various variables for ROS workings
 int linear_vel = 0;
 int angular_vel = 0;
 String notification;
 byte hindbrain_stopped = 0; //Check for estop from hindbrain
 byte midbrain_stopped  = 0; //Check for estop from midbrain
 
-//Define estop pin
-const byte ESTOP_PIN = 42;
 
 //Define LIDAR tilt servo
 const byte TILT_PIN = 8;
@@ -81,7 +92,20 @@ void twistCb( const geometry_msgs::Twist& twist_input ){
   chat(notification);
 }
 
-ros::Subscriber<geometry_msgs::Twist> sub("cmd_vel", &twistCb );
+ros::Subscriber<geometry_msgs::Twist> cmd_vel_sub("cmd_vel", &twistCb );
+
+//Callback function for an IR Estop message IRCbIRCbIRCbIRCbIRCbIRCbIRCbIRCbIRCbIRCbIRCbIRCbIRCbIRCbIRCbIRCbIRCbIRCb
+void irEstopCallback( const std_msgs::Int16& int_input ){
+  //Check and see if the midbrain says it's okay to move
+  int estop_message = int_input.data;
+  
+  if (estop_message == 2){
+    ir_estop = 2;
+  }
+  
+}
+
+ros::Subscriber<std_msgs::Int16>ir_estop_sub("ir_estop",&irEstopCallback);
 
 //SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
 void setup(){
@@ -111,7 +135,9 @@ void setup(){
   //Initialize ROS topics
   nh.initNode();
   nh.advertise(chatter);
-  nh.subscribe(sub);
+  nh.advertise(ir_estop_publisher);
+  nh.subscribe(cmd_vel_sub);
+  nh.subscribe(ir_estop_sub);
   
   //Initialize timing things
   current_time = millis();
@@ -119,7 +145,7 @@ void setup(){
   
   pinMode(ESTOP_PIN,INPUT);
   
-  //tilt_servo.attach(TILT_PIN);
+  tilt_servo.attach(TILT_PIN);
 }
 
 //Run hindbrain loop until commanded to stop LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
@@ -136,7 +162,7 @@ void loop(){
   
   //Sense: Read robot sensors
   
-  //Think: Run low level cognition and safety code
+  //Think: Run low level cognition and safety code TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
   if(digitalRead(ESTOP_PIN))
     delay_period = 500;
   else{
@@ -144,10 +170,15 @@ void loop(){
     chat("Physical estop pressed");
   }
   
+  check_ir_sensors();
+  
   //Act: Run actuators and behavior lights
   if(!hindbrain_stopped && !midbrain_stopped) //If there's an estop, don't go
   {
     blink();
+    
+    tilt_servo.write(current_tilt_position);
+    update_motors();
   }
   
   //Write status data up to midbrain
@@ -177,14 +208,55 @@ void chat(String message){
 
 //Update motor speeds
 void update_motors(){
-  forward_channel.write(90 - linear_vel);
-  turn_channel.write(90 - angular_vel);
+  //The ir_estop is the only estop the Arduino has to tell itself to stop via software
+  if (ir_estop == 1){
+    motor_stop();
+  }
+  else{
+    forward_channel.write(90 - linear_vel);
+    turn_channel.write(90 - angular_vel);
+  }
 }
 
 //Stop motors
 void motor_stop(){
   forward_channel.write(90);
   turn_channel.write(90);
+}
+
+//See if we need to estop based on IR input
+void check_ir_sensors(){
+  int ir_reading_1;
+  int ir_reading_2;
+  ir_reading_1 = analogRead(IR_PIN_1);
+  ir_reading_2 = analogRead(IR_PIN_2);
+  
+  if (ir_reading_1 > ir_threshold || ir_reading_2 > ir_threshold){
+    
+    if (ir_estop == 0){
+      ir_estop = 1;
+      int_msg.data = ir_estop;
+      ir_estop_publisher.publish(&int_msg);
+    }
+    
+    else if (ir_estop == 2){
+      
+      if (linear_vel > 0){
+        ir_estop = 1;
+        int_msg.data = ir_estop;
+        ir_estop_publisher.publish(&int_msg);
+      }
+    }
+    
+    
+  }
+  else{
+    if (ir_estop != 0){
+      ir_estop = 0;
+      int_msg.data = ir_estop;
+      ir_estop_publisher.publish(&int_msg);
+    }
+  }
 }
 
 //Blink all NeoPixels on and off
@@ -242,7 +314,7 @@ void change_all_colors(uint32_t color){
   right_ring.show();
 }
 
-//Helpre functions for right and left banks of lights
+//Helper functions for right and left banks of lights
 void change_left_colors(uint32_t color){
   for (int i = 0; i < 8; i++)
   {
