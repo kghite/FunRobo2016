@@ -45,7 +45,8 @@ const byte ESTOP_PIN = 42;
 //Define IR sensor variables
 const byte IR_PIN_1 = A0;
 const byte IR_PIN_2 = A1;
-const int ir_threshold = 450;
+const int ir_high_threshold = 450;
+const int ir_low_threshold  = 300;
 int ir_estop = 0;
 
 //Set up ROS node handling and feedback channel
@@ -233,7 +234,7 @@ void check_ir_sensors(){
   ir_reading_1 = analogRead(IR_PIN_1);
   ir_reading_2 = analogRead(IR_PIN_2);
   
-  if (ir_reading_1 > ir_threshold || ir_reading_2 > ir_threshold){
+  if (ir_reading_1 > ir_high_threshold || ir_reading_2 > ir_high_threshold || ir_reading_1 < ir_low_threshold || ir_reading_2 < ir_low_threshold){
     
     if (ir_estop == 0){
       ir_estop = 1;
