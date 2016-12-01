@@ -1,3 +1,5 @@
 #!/bin/bash
 
-Set up consistent port names
+echo "Moving USB Rules into /etc/udev/rules.d"
+
+mv 99-usb-serial.rules ~/../../etc/udev/rules.d

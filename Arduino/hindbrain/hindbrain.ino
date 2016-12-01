@@ -71,7 +71,7 @@ void twistCb( const geometry_msgs::Twist& twist_input ){
   angular_vel = int(90 * twist_input.angular.z);
   
   //Set motor speeds based on new command
-  update_motors();
+  //update_motors();
   
   //Print the received Twist message
   notification = "Received Twist message!\n";
