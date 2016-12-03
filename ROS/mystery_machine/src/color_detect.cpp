@@ -7,13 +7,13 @@ using namespace std;
 
  int main( int argc, char** argv )
  {
-    VideoCapture cap(0); //capture the video from web cam
+    // VideoCapture cap(0); //capture the video from web cam
 
-    if ( !cap.isOpened() )  // if not success, exit program
-    {
-         cout << "Cannot open the web cam" << endl;
-         return -1;
-    }
+    // if ( !cap.isOpened() )  // if not success, exit program
+    // {
+    //      cout << "Cannot open the web cam" << endl;
+    //      return -1;
+    // }
 
     namedWindow("Control", CV_WINDOW_AUTOSIZE); //create a window called "Control"
 
@@ -64,7 +64,7 @@ using namespace std;
   dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
   erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
 
-   imshow("Thresholded Image", imgThresholded); //show the thresholded image
+  imshow("Thresholded Image", imgThresholded); //show the thresholded image
   imshow("Original", imgOriginal); //show the original image
 
         if (waitKey(30) == 27) //wait for 'esc' key press for 30ms. If 'esc' key is pressed, break loop
