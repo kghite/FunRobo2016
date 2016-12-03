@@ -7,13 +7,13 @@
 #include <vector>
 #include "ros/ros.h"
 #include "sensor_msgs/LaserScan.h"
-#include "std_msgs/Int16.h"
-#include "std_msgs/Int16MultiArray.h"
+#include "std_msgs/Int8.h"
+#include "std_msgs/Int8MultiArray.h"
 
 ros::Publisher *pub_arb;
 sensor_msgs::LaserScan scan;
-std_msgs::Int16MultiArray cmd_array;
-int backward[22] = {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 
+std_msgs::Int8MultiArray cmd_array;
+int backward[22] = {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int stop[22] =     {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -56,7 +56,7 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
     cmd_array.data.assign(&forward[0], &forward[0]+22);
   }
 
-  for (int i=0; i<sizeof(cmd_array.data)/sizeof(cmd_array.data[0])-1; i++)
+  for (int i=0; i<22; i++)
   {
     ROS_INFO("%d, ", cmd_array.data.at(i));
   }
@@ -70,7 +70,7 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
 
 int main(int argc, char **argv)
 {
-  cmd_array.data.assign(&stop[0], &stop[0]+11);
+  cmd_array.data.assign(&stop[0], &stop[0]+22);
 
   ros::init(argc, argv, "midbrain");
 
@@ -78,7 +78,7 @@ int main(int argc, char **argv)
 
   ros::Subscriber sub_imu = n.subscribe("/scan", 1000, controlSpeed);
 
-  pub_arb = new ros::Publisher(n.advertise<std_msgs::Int16MultiArray>("obst/cmd_vel", 1000));
+  pub_arb = new ros::Publisher(n.advertise<std_msgs::Int8MultiArray>("obst/cmd_vel", 1000));
 
   ros::spin();
 

@@ -8,12 +8,12 @@
 #include "ros/ros.h"
 #include "geometry_msgs/Vector3Stamped.h"
 #include "sensor_msgs/NavSatFix.h"
-#include "std_msgs/Int16.h"
-#include "std_msgs/Int16MultiArray.h"
+#include "std_msgs/Int8.h"
+#include "std_msgs/Int8MultiArray.h"
 
 sensor_msgs::NavSatFix gps_pos;
 geometry_msgs::Vector3Stamped imu_mag;
-std_msgs::Int16MultiArray cmd_array;
+std_msgs::Int8MultiArray cmd_array;
 
 void turnToGoal(const sensor_msgs::NavSatFix goal_arr)
 {
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
 
   ros::Subscriber sub_imu = n.subscribe("imu/mag", 1000, getIMU);
 
-  ros::Publisher pub_arb = n.advertise<std_msgs::Int16MultiArray>("wpt/cmd_vel", 1000);
+  ros::Publisher pub_arb = n.advertise<std_msgs::Int8MultiArray>("wpt/cmd_vel", 1000);
 
   pub_arb.publish(cmd_array);
 
