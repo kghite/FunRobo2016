@@ -24,6 +24,8 @@ uint32_t white = left_strip.Color(0,0,0,255);
 uint32_t yellow= left_strip.Color(255,128,0);
 uint32_t red   = left_strip.Color(255,0,0,0);
 uint32_t off   = left_strip.Color(0,0,0,0);
+uint32_t blue  = left_strip.Color(0,64,255,0);
+uint32_t purple= left_strip.Color(255,0,255,0);
 
 //Variables for blink timing.
 unsigned long current_time;
@@ -38,6 +40,9 @@ const byte TURN_PIN = 7;
 
 Adafruit_TiCoServo forward_channel;
 Adafruit_TiCoServo turn_channel;
+
+int linear_vel =  0;
+int angular_vel = 0;
 
 //Define estop pin
 const byte ESTOP_PIN = 42;
@@ -59,11 +64,8 @@ std_msgs::Int16 int_msg;
 ros::Publisher ir_estop_publisher("ir_estop",&int_msg);
 
 //Various variables for ROS workings
-int linear_vel =  0;
-int angular_vel = 0;
+int odroid_estop = 0;
 String notification;
-byte hindbrain_stopped = 0; //Check for estop from hindbrain
-byte midbrain_stopped  = 0; //Check for estop from midbrain
 
 
 //Define LIDAR tilt servo
@@ -108,6 +110,16 @@ void irEstopCallback( const std_msgs::Int16& int_input ){
 
 ros::Subscriber<std_msgs::Int16>ir_estop_sub("ir_estop",&irEstopCallback);
 
+//Callback function for an Odroid Estop message OCbOcbOcbOCbOcbOcbOCbOcbOcbOCbOcbOcbOCbOcbOcbOCbOcbOcbOCbOcbOcbOCbOcbOcb
+void odroidEstopCallback( const std_msgs::Int16& int_input ){
+  //Just update this estop.. Pretty easy
+  int estop_message = int_input.data;
+  
+  odroid_estop = estop_message;
+}
+
+ros::Subscriber<std_msgs::Int16>odroid_estop_sub("odroid_estop",&odroidEstopCallback);
+
 //SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
 void setup(){
   //Setup all the NeoPixels
@@ -139,6 +151,7 @@ void setup(){
   nh.advertise(ir_estop_publisher);
   nh.subscribe(cmd_vel_sub);
   nh.subscribe(ir_estop_sub);
+  nh.subscribe(odroid_estop_sub);
   
   //Initialize timing things
   current_time = millis();
@@ -153,13 +166,6 @@ void setup(){
 void loop(){
   //Read Midbrain commands
   
-  //This is changed somewhat by ROS
-  /* if(Serial.available())
-  {
-    command = Serial.read();
-    Serial.println("Midbrain sent:");
-    Serial.println(command);
-  } */
   
   //Sense: Read robot sensors
   
@@ -167,31 +173,20 @@ void loop(){
   if(digitalRead(ESTOP_PIN))
     delay_period = 500;
   else{
-    delay_period = 250;
+    delay_period = 150;
     chat("Physical estop pressed");
   }
   
   check_ir_sensors();
   
   //Act: Run actuators and behavior lights
-  if(!hindbrain_stopped && !midbrain_stopped) //If there's an estop, don't go
-  {
-    blink();
-    
-    tilt_servo.write(current_tilt_position);
-    
-    update_motors();
-  }
+  blink();
+  
+  tilt_servo.write(current_tilt_position);
+  
+  update_motors();
   
   //Write status data up to midbrain
-  if(hindbrain_stopped || midbrain_stopped) //If there's an estop, say so and stop the motors
-  {
-    notification = "Hindbrain has stopped";
-    chat(notification);
-    
-    //Stop the motors!
-    motor_stop();
-  }
   
   //Spin!
   nh.spinOnce();
@@ -211,7 +206,7 @@ void chat(String message){
 //Update motor speeds
 void update_motors(){
   //The ir_estop is the only estop the Arduino has to tell itself to stop via software
-  if (ir_estop == 1){
+  if (ir_estop == 1 || odroid_estop == 1){
    forward_channel.write(90);
     turn_channel.write(90);
   }
@@ -221,25 +216,22 @@ void update_motors(){
   }
 }
 
-//Stop motors
-void motor_stop(){
-  forward_channel.write(90);
-  turn_channel.write(90);
-}
-
 //See if we need to estop based on IR input
 void check_ir_sensors(){
   int ir_reading_1;
   int ir_reading_2;
   ir_reading_1 = analogRead(IR_PIN_1);
   ir_reading_2 = analogRead(IR_PIN_2);
+  chat(String(ir_reading_1));
+  chat(String(ir_reading_2));
+  chat("------");
   
   if (ir_reading_1 > ir_high_threshold || ir_reading_2 > ir_high_threshold || ir_reading_1 < ir_low_threshold || ir_reading_2 < ir_low_threshold){
-    
     if (ir_estop == 0){
       ir_estop = 1;
       int_msg.data = ir_estop;
       ir_estop_publisher.publish(&int_msg);
+      //delay(200);
     }
     
     else if (ir_estop == 2){
@@ -248,6 +240,7 @@ void check_ir_sensors(){
         ir_estop = 1;
         int_msg.data = ir_estop;
         ir_estop_publisher.publish(&int_msg);
+        //delay(200);
       }
     }
     
@@ -271,8 +264,12 @@ void blink(){
     
     //Logic to do turning/stopped lights
     if(blinked){
-      if (linear_vel == 0 && angular_vel == 0)
+      if (linear_vel == 0 && angular_vel == 0 && ir_estop == 1)
+        change_all_colors(purple);
+      else if (linear_vel == 0 && angular_vel == 0)
         change_all_colors(red);
+      else if (ir_estop == 1)
+        change_all_colors(blue);
       else if (angular_vel < -3){ //turning left
         if(linear_vel>=0)
           change_left_colors(white);
