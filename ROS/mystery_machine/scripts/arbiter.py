@@ -61,7 +61,7 @@ class Midbrain_Arbiter(object):
 		msg = Twist()
 		msg.linear.x = float(2*vel)/float((ARRAY_SIZE-1))-1
 		print(float(2*vel)/float((ARRAY_SIZE-1))-1)
-		msg.angular.z = float(2*turn)/float((ARRAY_SIZE-1))-1
+		msg.angular.z = float(2*turn)/float((ARRAY_SIZE-1))*0.25-0.25 #Turn a maximum of 0.25 instead of 1
 		print(float(2*turn)/float((ARRAY_SIZE-1))-1)
 		#print(msg)
 		self.cmd_vel_pub.publish(msg)
