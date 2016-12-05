@@ -18,6 +18,18 @@ std_msgs::Int8MultiArray cmd_array;
 sensor_msgs::LaserScan filtered_scan;
 sensor_msgs::LaserScan scan;
 
+ros::Publisher pub_filtered_scan;
+ros::Publisher pub_arb;
+
+int right[22] =    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0};
+
+int stop[22] =     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0};
+
+int left[22] =     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0};
+
 /*void turnToGoal(const sensor_msgs::NavSatFix goal_arr)
 {
   // DEBUG
@@ -62,7 +74,7 @@ void getIMU(const geometry_msgs::Vector3Stamped imu)
   imu_mag = imu;
 } */
 
-ros::Publisher pub_filtered_scan;
+
 
 void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
 {
@@ -111,14 +123,17 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
 
     ROS_INFO("%f",average_range);
 
-    if(average_range > 0.7)
-        //Turn right
+    if(average_range > 0.65)
+        cmd_array.data.assign(right, right+22);
     else if(average_range < 0.5)
-        //Turn left
+        cmd_array.data.assign(left, left+22);
     else
-        //Go straight
+        cmd_array.data.assign(stop, stop+22);
 
   pub_filtered_scan.publish(filtered_scan);
+
+  pub_arb.publish(cmd_array);
+  cmd_array.data.clear();
 
 }
 
@@ -135,7 +150,7 @@ int main(int argc, char **argv)
 
   ros::Subscriber sub_lidar = n.subscribe("scan",1000,getLIDAR);
 
-  ros::Publisher pub_arb = n.advertise<std_msgs::Int8MultiArray>("wpt/cmd_vel", 1000);
+  pub_arb = n.advertise<std_msgs::Int8MultiArray>("wpt/cmd_vel", 1000);
 
   pub_filtered_scan = n.advertise<sensor_msgs::LaserScan>("filtered_scan",1000);
 
