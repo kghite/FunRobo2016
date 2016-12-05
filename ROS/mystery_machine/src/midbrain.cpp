@@ -14,11 +14,11 @@
 ros::Publisher *pub_arb;
 sensor_msgs::LaserScan scan;
 std_msgs::Int8MultiArray cmd_array;
-int backward[22] = {0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0,
+int backward[22] = {0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int stop[22] =     {0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-int forward[22] =  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+int forward[22] =  {0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
