@@ -26,8 +26,13 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
   // DEBUG
   ROS_INFO("Received Scan");
 
+
+
   // Assign LIDAR scan to global
   scan = lidar_scan;
+
+  long number_of_ranges = lidar_scan.ranges.size();
+  float forward_distance = 100;
 
   // Remove junk values from scan data (0.0 is out of range or no read)
   for(int i=0; i < sizeof(scan.ranges) / sizeof(scan.ranges[0]); i++)
@@ -39,9 +44,15 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
   }
 
   // Calculate output array using some portion of scan
-  double forward_distance = scan.ranges[256];
-  ROS_INFO("Forward distance: %f", forward_distance);
-  if (forward_distance < .4)
+  for (long i = number_of_ranges/3; i<2*number_of_ranges/3;i++)
+  {
+      if (forward_distance > scan.ranges[i])
+          forward_distance = scan.ranges[i];
+  }
+
+
+  ROS_INFO("Forward distance: %lf", forward_distance);
+  if (forward_distance < .3)
   {
     // Move backward
     ROS_INFO("Backward");
@@ -58,7 +69,7 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
     // Move forward
     ROS_INFO("Forward");
     cmd_array.data.assign(forward, forward+22);
-    ROS_INFO_STREAM(cmd_array);
+    //ROS_INFO_STREAM(cmd_array);
   }
 
   // for (int i=0; i<22; i++)
