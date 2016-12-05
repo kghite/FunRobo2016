@@ -2,13 +2,13 @@ cmake_minimum_required(VERSION 2.8.3)
 project(mystery_machine)
 
 ## Find catkin and any catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs geometry_msgs OpenCV image_transport cv_bridge)
-find_package(OpenCV REQUIRED)
+find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs geometry_msgs) #OpenCV image_transport cv_bridge)
+#find_package(OpenCV REQUIRED)
 
 ## Declare a catkin package
 catkin_package()
 
-include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS}) #{OpenCV_INCLUDE_DIRS}
 #include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_executable(forebrain src/forebrain.cpp)
@@ -17,6 +17,6 @@ target_link_libraries(forebrain ${catkin_LIBRARIES})
 add_executable(midbrain src/midbrain.cpp)
 target_link_libraries(midbrain ${catkin_LIBRARIES})
 
-add_executable(camera_subscriber src/camera_subscriber.cpp)
-target_link_libraries(camera_subscriber ${catkin_LIBRARIES} ${OpenCV_LIBS})
+#add_executable(camera_subscriber src/camera_subscriber.cpp)
+#target_link_libraries(camera_subscriber ${catkin_LIBRARIES}) #${OpenCV_LIBS}
 #target_link_libraries(camera_subscriber ${OpenCV_LIBS})
