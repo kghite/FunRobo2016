@@ -4,6 +4,7 @@
 // Output Int16MultArray on /obst/cmd_vel to turn toward waypoint set on /goal
 
 #include <string>
+#include <iostream>
 #include <vector>
 #include "ros/ros.h"
 #include "sensor_msgs/LaserScan.h"
@@ -13,11 +14,11 @@
 ros::Publisher *pub_arb;
 sensor_msgs::LaserScan scan;
 std_msgs::Int8MultiArray cmd_array;
-int backward[22] = {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+int backward[22] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int stop[22] =     {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-int forward[22] =  {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+int forward[22] =  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
@@ -43,25 +44,30 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
   if (forward_distance < .5)
   {
     // Move backward
-    cmd_array.data.assign(&backward[0], &backward[0]+22);
+    ROS_INFO("Backward");
+    cmd_array.data.assign(backward, backward+22);
   }
   else if (forward_distance < 1)
   {
     // Stop
-    cmd_array.data.assign(&stop[0], &stop[0]+22);
+    ROS_INFO("Stop");
+    cmd_array.data.assign(stop, stop+22);
   }
   else
   {
     // Move forward
-    cmd_array.data.assign(&forward[0], &forward[0]+22);
+    ROS_INFO("Forward");
+    cmd_array.data.assign(forward, forward+22);
+    ROS_INFO_STREAM(cmd_array);
   }
 
-  for (int i=0; i<22; i++)
-  {
-    ROS_INFO("%d, ", cmd_array.data.at(i));
-  }
+  // for (int i=0; i<22; i++)
+  // {
+  //   ROS_INFO("%d, ", cmd_array.data.at(i));
+  // }
 
   pub_arb->publish(cmd_array);
+  cmd_array.data.clear();
 
   // DEBUG
   ROS_INFO("Publishing Output");
