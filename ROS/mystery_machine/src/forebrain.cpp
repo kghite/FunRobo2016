@@ -10,12 +10,15 @@
 #include "sensor_msgs/NavSatFix.h"
 #include "std_msgs/Int8.h"
 #include "std_msgs/Int8MultiArray.h"
+#include "sensor_msgs/LaserScan.h"
 
-sensor_msgs::NavSatFix gps_pos;
-geometry_msgs::Vector3Stamped imu_mag;
+//sensor_msgs::NavSatFix gps_pos;
+//geometry_msgs::Vector3Stamped imu_mag;
 std_msgs::Int8MultiArray cmd_array;
+sensor_msgs::LaserScan scan;
+sensor_msgs::LaserScan filtered_scan;
 
-void turnToGoal(const sensor_msgs::NavSatFix goal_arr)
+/*void turnToGoal(const sensor_msgs::NavSatFix goal_arr)
 {
   // DEBUG
   ROS_INFO("Received Goal");
@@ -57,6 +60,40 @@ void getGPS(const sensor_msgs::NavSatFix gps)
 void getIMU(const geometry_msgs::Vector3Stamped imu)
 {
   imu_mag = imu;
+} */
+
+ros::Publisher pub_filtered_scan = n.advertise<sensor_msgs::LaserScan("filtered_scan",1000);
+
+void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
+{
+  ROS_INFO("Received Scan");
+
+  filtered_scan = lidar_scan;
+  std::vector<int> indices;
+
+  int number_of_ranges = sizeof(scan.ranges) / sizeof(scan.ranges[0]);
+
+  float difference_threshold = 0.5;
+
+  // Remove junk values from scan data (0.0 is out of range or no read)
+  for(int i=0; i < number_of_ranges; i++)
+  {
+    if(scan.ranges[i] < scan.range_min || scan.ranges[i] > scan.range_max)
+      scan.ranges[i] = 0.0;
+  }
+
+
+
+  for(int i = number_of_ranges/2; i < number_of_ranges; i++)
+  {
+    if(scan.ranges[i] - scan.ranges[i-1] < difference_threshold)
+      filtered_scan[i] = 0;
+    else
+        indices.push_back(i);
+  }
+
+  pub_filtered_scan.publish(filtered_scan);
+
 }
 
 int main(int argc, char **argv)
@@ -66,11 +103,13 @@ int main(int argc, char **argv)
 
   ros::NodeHandle n;
 
-  ros::Subscriber sub_goal = n.subscribe("goal", 1000, turnToGoal);
+  /* ros::Subscriber sub_goal = n.subscribe("goal", 1000, turnToGoal);
 
   ros::Subscriber sub_gps = n.subscribe("fix", 1000, getGPS);
 
-  ros::Subscriber sub_imu = n.subscribe("imu/mag", 1000, getIMU);
+  ros::Subscriber sub_imu = n.subscribe("imu/mag", 1000, getIMU); */
+
+  ros::Subscriber sub_lidar = n.subscribe("scan",1000,getLIDAR);
 
   ros::Publisher pub_arb = n.advertise<std_msgs::Int8MultiArray>("wpt/cmd_vel", 1000);
 

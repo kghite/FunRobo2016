@@ -133,10 +133,10 @@ void setup(){
   left_ring.show();
   right_ring.show();
   
-  //left_strip.setBrightness(128);
-  //right_strip.setBrightness(128);
-  //left_ring.setBrightness(128);
-  //right_ring.setBrightness(128);
+  left_strip.setBrightness(16);
+  right_strip.setBrightness(16);
+  left_ring.setBrightness(16);
+  right_ring.setBrightness(16);
   
   //Attach Servo objects to correct pins
   forward_channel.attach(FORWARD_PIN);
