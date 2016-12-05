@@ -15,8 +15,8 @@
 //sensor_msgs::NavSatFix gps_pos;
 //geometry_msgs::Vector3Stamped imu_mag;
 std_msgs::Int8MultiArray cmd_array;
-sensor_msgs::LaserScan scan;
 sensor_msgs::LaserScan filtered_scan;
+sensor_msgs::LaserScan scan;
 
 /*void turnToGoal(const sensor_msgs::NavSatFix goal_arr)
 {
@@ -62,35 +62,61 @@ void getIMU(const geometry_msgs::Vector3Stamped imu)
   imu_mag = imu;
 } */
 
-ros::Publisher pub_filtered_scan = n.advertise<sensor_msgs::LaserScan("filtered_scan",1000);
+ros::Publisher pub_filtered_scan;
 
 void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
 {
-  ROS_INFO("Received Scan");
+  //ROS_INFO("Received Scan");
 
-  filtered_scan = lidar_scan;
+  scan.ranges = lidar_scan.ranges;
+  filtered_scan.ranges = lidar_scan.ranges;
+  filtered_scan.header.frame_id = lidar_scan.header.frame_id;
+  filtered_scan.angle_min = lidar_scan.angle_min;
+  filtered_scan.angle_max = lidar_scan.angle_max;
+  filtered_scan.angle_increment = lidar_scan.angle_increment;
+  filtered_scan.range_max = lidar_scan.range_max;
+  filtered_scan.range_min = lidar_scan.range_min;
   std::vector<int> indices;
 
-  int number_of_ranges = sizeof(scan.ranges) / sizeof(scan.ranges[0]);
+  long number_of_ranges = lidar_scan.ranges.size();
 
-  float difference_threshold = 0.5;
+    float average_range = 0;
+
+  float distance_threshold = 0.0;
 
   // Remove junk values from scan data (0.0 is out of range or no read)
   for(int i=0; i < number_of_ranges; i++)
   {
-    if(scan.ranges[i] < scan.range_min || scan.ranges[i] > scan.range_max)
-      scan.ranges[i] = 0.0;
+    if(filtered_scan.ranges[i] < filtered_scan.range_min || filtered_scan.ranges[i] > filtered_scan.range_max)
+        filtered_scan.ranges[i] = 0.0;
   }
 
+    for(int i = 0; i < 3*number_of_ranges/4; i++)
+    {
+        filtered_scan.ranges[i] = 0;
+    }
 
+    for(float i = 3*number_of_ranges/4; i < 5*number_of_ranges / 6; i++)
+    {
+        average_range += filtered_scan.ranges[i];
+    }
 
-  for(int i = number_of_ranges/2; i < number_of_ranges; i++)
-  {
-    if(scan.ranges[i] - scan.ranges[i-1] < difference_threshold)
-      filtered_scan[i] = 0;
+    average_range /= number_of_ranges/6;
+
+    for(float i = 5*number_of_ranges/6; i < number_of_ranges; i++)
+    {
+        if(filtered_scan.ranges[i])
+            filtered_scan.ranges[i] = 0;
+    }
+
+    ROS_INFO("%f",average_range);
+
+    if(average_range > 0.7)
+        //Turn right
+    else if(average_range < 0.5)
+        //Turn left
     else
-        indices.push_back(i);
-  }
+        //Go straight
 
   pub_filtered_scan.publish(filtered_scan);
 
@@ -98,10 +124,8 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
 
 int main(int argc, char **argv)
 {
-
-  ros::init(argc, argv, "forebrain");
-
-  ros::NodeHandle n;
+    ros::init(argc, argv, "forebrain");
+    ros::NodeHandle n;
 
   /* ros::Subscriber sub_goal = n.subscribe("goal", 1000, turnToGoal);
 
@@ -112,6 +136,8 @@ int main(int argc, char **argv)
   ros::Subscriber sub_lidar = n.subscribe("scan",1000,getLIDAR);
 
   ros::Publisher pub_arb = n.advertise<std_msgs::Int8MultiArray>("wpt/cmd_vel", 1000);
+
+  pub_filtered_scan = n.advertise<sensor_msgs::LaserScan>("filtered_scan",1000);
 
   pub_arb.publish(cmd_array);
 
