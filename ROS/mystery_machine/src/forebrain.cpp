@@ -92,7 +92,7 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
 
   long number_of_ranges = lidar_scan.ranges.size();
 
-    float average_range = 0;
+  float average_range = 0;
 
   float distance_threshold = 0.0;
 
@@ -103,30 +103,29 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
         filtered_scan.ranges[i] = 0.0;
   }
 
-    for(int i = 0; i < 3*number_of_ranges/4; i++)
+    for(int i = 0; i < number_of_ranges/6; i++)
     {
         filtered_scan.ranges[i] = 0;
     }
 
-    for(float i = 3*number_of_ranges/4; i < 5*number_of_ranges / 6; i++)
+    for(float i = number_of_ranges/6; i < number_of_ranges / 4; i++)
     {
         average_range += filtered_scan.ranges[i];
+    }
+    
+    for(float i = number_of_ranges/4; i < number_of_ranges; i++)
+    {
+        filtered_scan.ranges[i] = 0;
     }
 
     average_range /= number_of_ranges/6;
 
-    for(float i = 5*number_of_ranges/6; i < number_of_ranges; i++)
-    {
-        if(filtered_scan.ranges[i])
-            filtered_scan.ranges[i] = 0;
-    }
-
     ROS_INFO("%f",average_range);
 
     if(average_range > 0.65)
-        cmd_array.data.assign(right, right+22);
-    else if(average_range < 0.5)
         cmd_array.data.assign(left, left+22);
+    else if(average_range < 0.5)
+        cmd_array.data.assign(right, right+22);
     else
         cmd_array.data.assign(stop, stop+22);
 
