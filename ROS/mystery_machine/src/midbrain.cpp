@@ -41,13 +41,13 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
   // Calculate output array using some portion of scan
   double forward_distance = scan.ranges[256];
   ROS_INFO("Forward distance: %f", forward_distance);
-  if (forward_distance < .5)
+  if (forward_distance < .4)
   {
     // Move backward
     ROS_INFO("Backward");
     cmd_array.data.assign(backward, backward+22);
   }
-  else if (forward_distance < 1)
+  else if (forward_distance < .8)
   {
     // Stop
     ROS_INFO("Stop");

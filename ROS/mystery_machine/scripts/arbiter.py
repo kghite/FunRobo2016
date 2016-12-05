@@ -23,9 +23,13 @@ class Midbrain_Arbiter(object):
 		self.cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=1)
 
 	def wpt_cmd_vel_cb(self, msg):
-		self.update_array(data, INPUTS.index('wpt'))
+		#print("TURN INPUT")
+		#print(msg)
+		self.update_array(msg.data, INPUTS.index('wpt'))
 
 	def obst_cmd_vel_cb(self, msg):
+		#print("VEL INPUT")
+		#print(msg)
 		self.update_array(msg.data, INPUTS.index('obst'))
 
 	def update_array(self, data, row):
@@ -47,17 +51,17 @@ class Midbrain_Arbiter(object):
 			vel_sum_array += self.vel_array[i]
 			turn_sum_array += self.turn_array[i]
 
-		print(vel_sum_array)
-		print(turn_sum_array)
+		#print(vel_sum_array)
+		#print(turn_sum_array)
 		
 		vel = vel_sum_array.argmax()
-		print(vel)
+		#print(vel)
 		turn = turn_sum_array.argmax()
-		print(turn)
+		#print(turn)
 		msg = Twist()
-		msg.linear.x = 2*vel/(ARRAY_SIZE-1)-1
+		msg.linear.x = float(2*vel)/float((ARRAY_SIZE-1))-1
 		print(float(2*vel)/float((ARRAY_SIZE-1))-1)
-		msg.angular.z = 2*turn/(ARRAY_SIZE-1)-1
+		msg.angular.z = float(2*turn)/float((ARRAY_SIZE-1))-1
 		print(float(2*turn)/float((ARRAY_SIZE-1))-1)
 		#print(msg)
 		self.cmd_vel_pub.publish(msg)
