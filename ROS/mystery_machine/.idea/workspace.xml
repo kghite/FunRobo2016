@@ -53,8 +53,8 @@
       <file leaf-file-name="forebrain.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/forebrain.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="522">
-              <caret line="29" column="36" selection-start-line="29" selection-start-column="36" selection-end-line="29" selection-end-column="36" />
+            <state relative-caret-position="540">
+              <caret line="30" column="42" selection-start-line="30" selection-start-column="42" selection-end-line="30" selection-end-column="42" />
               <folding>
                 <element signature="e#183#200#0" expanded="true" />
               </folding>
@@ -487,7 +487,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="12329000" />
+    <option name="totallyTimeSpent" value="12803000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="65" y="52" width="927" height="1028" extended-state="4" />
@@ -639,8 +639,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/forebrain.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="522">
-          <caret line="29" column="36" selection-start-line="29" selection-start-column="36" selection-end-line="29" selection-end-column="36" />
+        <state relative-caret-position="540">
+          <caret line="30" column="42" selection-start-line="30" selection-start-column="42" selection-end-line="30" selection-end-column="42" />
           <folding>
             <element signature="e#183#200#0" expanded="true" />
           </folding>

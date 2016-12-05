@@ -21,14 +21,14 @@ sensor_msgs::LaserScan scan;
 ros::Publisher pub_filtered_scan;
 ros::Publisher pub_arb;
 
-int right[22] =    {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
-                    0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0};
+int right[22] =    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0};
 
-int stop[22] =     {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0};
+int stop[22] =     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0};
 
-int left[22] =     {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0};
+int left[22] =     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0};
 
 /*void turnToGoal(const sensor_msgs::NavSatFix goal_arr)
 {
