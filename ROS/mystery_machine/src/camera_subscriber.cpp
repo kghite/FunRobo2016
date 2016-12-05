@@ -1,13 +1,10 @@
 #include <string>
-#include <stdlib.h>
 #include <vector>
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
-//#include <opencv2/imgcodecs/imgcodecs.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-//#include <opencv2/imgproc_imgproc_c.h>
 #include <opencv2/highgui/highgui.hpp>
 
 namespace enc = sensor_msgs::image_encodings;
@@ -18,6 +15,7 @@ static const std::string contoured_window = "Contoured";
  
 image_transport::Publisher pub;
 
+// Define initial filter parameters
 int blur = 1;
 int lowerH = 0;
 int upperH = 23;
@@ -40,34 +38,54 @@ void callback(const sensor_msgs::ImageConstPtr& original_image)
         return;
     }
 
-    cv::medianBlur(cv_ptr->image, cv_ptr->image, blur*2+1);
-
-    // Apply HSV filter
+    // Apply blur and HSV filter
     cv::Mat img_mask, img_hsv;
     std::vector<std::vector<cv::Point> > contours;
     std::vector<cv::Vec4i> hierarchy;
+    cv::medianBlur(cv_ptr->image, cv_ptr->image, blur*2+1);
     cv::cvtColor(cv_ptr->image,img_hsv,CV_BGR2HSV);
-    cv::inRange(img_hsv,cv::Scalar(lowerH,lowerS,lowerV),cv::Scalar(upperH,upperS,upperV),img_mask);
+    cv::inRange(img_hsv,cv::Scalar(lowerH,lowerS,lowerV),cv::Scalar(upperH,upperS,upperV),\
+		img_mask);
     cv::imshow(filtered_window, img_mask);
     
-    // Find contours and create bounded rectangles
-    cv::findContours(img_mask, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+    // Find contours
+    cv::findContours(img_mask, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE,\
+		     cv::Point(0, 0));
+
     std::vector<std::vector<cv::Point> > contours_poly( contours.size() );
-    std::vector<cv::Rect> boundRect( contours.size() );
-    std::vector<cv::Point2f>center( contours.size() );
-    std::vector<float>radius( contours.size() );
-    for( size_t i = 0; i < contours.size(); i++ )
+    std::vector<cv::Rect> boundRect(contours.size());
+    cv::Scalar color = cv::Scalar(255, 0, 0);
+    int height_threshold = 3;
+
+    for(size_t i=0; i<contours.size(); i++)
     {
+      // Define bounding rectangles for each contour
       cv::approxPolyDP(cv::Mat(contours[i]), contours_poly[i], 3, true);
       boundRect[i] = cv::boundingRect(cv::Mat(contours_poly[i]));
+      // Remove really small rectangles
+      if(boundRect[i].height < height_threshold) boundRect.erase(boundRect.begin()+i);
     }
-    for( size_t i = 0; i< contours.size(); i++ )
-    {
-      cv::Scalar color = cv::Scalar(255, 0, 0);
-      cv::rectangle(cv_ptr->image, boundRect[i].tl(), boundRect[i].br(), color, 1, 8, 0 );
-    }
-    cv::imshow(raw_window, cv_ptr->image);
 
+    for(size_t i=0; i<boundRect.size(); i++)
+    {
+      // Draw rectangles
+      cv::rectangle(cv_ptr->image, boundRect[i].tl(), boundRect[i].br(), color, 1, 8, 0 );
+
+      // Label tall things as cones
+      if(boundRect[i].height >= 1.5*boundRect[i].width)
+      {
+	cv::putText(cv_ptr->image, "cone", boundRect[i].tl(), cv::FONT_HERSHEY_PLAIN, 1.0, \
+		    CV_RGB(0, 0, 255), 1.0);
+      }
+      // Round things are buoys
+      else
+      {
+	cv::putText(cv_ptr->image, "buoy", boundRect[i].tl(), cv::FONT_HERSHEY_PLAIN, 1.0, \
+		    CV_RGB(0, 0, 255), 1.0);
+      }
+    }
+
+    cv::imshow(raw_window, cv_ptr->image);
     cv::waitKey(3);
 
     // Convert from OpenCV image to ROS image message and publish
