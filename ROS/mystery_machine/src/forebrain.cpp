@@ -110,7 +110,8 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
 
     for(float i = number_of_ranges/6; i < number_of_ranges / 4; i++)
     {
-        average_range += filtered_scan.ranges[i];
+        if(!isnan(filtered_scan.ranges[i]))
+            average_range += filtered_scan.ranges[i];
     }
     
     for(float i = number_of_ranges/4; i < number_of_ranges; i++)
