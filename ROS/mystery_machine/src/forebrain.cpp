@@ -21,10 +21,16 @@ sensor_msgs::LaserScan scan;
 ros::Publisher pub_filtered_scan;
 ros::Publisher pub_arb;
 
-int right[22] =    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0};
+int right1[22] =   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0};
 
-int stop[22] =     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+int right3[22] =   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0};
+
+int right5[22] =   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+int straight[22] =     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0};
 
 int left[22] =     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -94,8 +100,6 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
 
   float average_range = 0;
 
-  float distance_threshold = 0.0;
-
   // Remove junk values from scan data (0.0 is out of range or no read)
   for(int i=0; i < number_of_ranges; i++)
   {
@@ -108,10 +112,14 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
         filtered_scan.ranges[i] = 0;
     }
 
+    int distances_counted = 0;
+
     for(float i = number_of_ranges/6; i < number_of_ranges / 4; i++)
     {
-        if(!isnan(filtered_scan.ranges[i]))
+        if(!isnan(filtered_scan.ranges[i])) {
             average_range += filtered_scan.ranges[i];
+            distances_counted++;
+        }
     }
     
     for(float i = number_of_ranges/4; i < number_of_ranges; i++)
@@ -119,16 +127,20 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
         filtered_scan.ranges[i] = 0;
     }
 
-    average_range /= number_of_ranges/6;
+    average_range /= distances_counted;
 
     ROS_INFO("%f",average_range);
 
-    if(average_range > 0.65)
-        cmd_array.data.assign(left, left+22);
+    if(average_range < 0.4)
+        cmd_array.data.assign(right5, right5+22);
     else if(average_range < 0.5)
-        cmd_array.data.assign(right, right+22);
+        cmd_array.data.assign(right3, right3+22);
+    else if(average_range < 0.6)
+        cmd_array.data.assign(right1, right1+22);
+    else if(average_range < 0.7)
+        cmd_array.data.assign(straight, straight+22);
     else
-        cmd_array.data.assign(stop, stop+22);
+        cmd_array.data.assign(left, left+22);
 
   pub_filtered_scan.publish(filtered_scan);
 
