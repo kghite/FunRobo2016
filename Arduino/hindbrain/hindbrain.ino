@@ -174,7 +174,7 @@ void loop(){
     delay_period = 500;
   else{
     delay_period = 150;
-    chat("Physical estop pressed");
+    //chat("Physical estop pressed");
   }
   
   check_ir_sensors();
@@ -182,7 +182,7 @@ void loop(){
   //Act: Run actuators and behavior lights
   blink();
   
-  tilt_servo.write(current_tilt_position);
+  //tilt_servo.write(current_tilt_position);
   
   update_motors();
   
@@ -231,7 +231,6 @@ void check_ir_sensors(){
       ir_estop = 1;
       int_msg.data = ir_estop;
       ir_estop_publisher.publish(&int_msg);
-      //delay(200);
     }
     
     else if (ir_estop == 2){
@@ -240,19 +239,18 @@ void check_ir_sensors(){
         ir_estop = 1;
         int_msg.data = ir_estop;
         ir_estop_publisher.publish(&int_msg);
-        //delay(200);
       }
     }
     
     
   }
-//  else{
-//    if (ir_estop != 0){
-//      ir_estop = 0;
-//      int_msg.data = ir_estop;
-//      ir_estop_publisher.publish(&int_msg);
-//    }
-//  }
+  else{
+    if (ir_estop != 0){
+      ir_estop = 0;
+      int_msg.data = ir_estop;
+      ir_estop_publisher.publish(&int_msg);
+    }
+  }
 }
 
 //Blink all NeoPixels on and off
