@@ -1,7 +1,7 @@
 <launch>
 
 	<!-- Rosserial -->
-	<node pkg="rosserial_python" type="serial_node.py" name="serial_node" args="/dev/ttyACM1" />
+	<node pkg="rosserial_python" type="serial_node.py" name="serial_node" args="/dev/ttyACM2" />
 
 	<!-- Teleop -->
 	<node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" name="teleop_twist_keyboard" />
