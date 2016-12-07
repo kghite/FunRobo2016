@@ -11,16 +11,19 @@
 #include "sensor_msgs/NavSatFix.h"
 #include "std_msgs/Int8.h"
 #include "std_msgs/Int8MultiArray.h"
+#include "std_msgs/Int16MultiArray.h"
 #include "sensor_msgs/LaserScan.h"
 
 //sensor_msgs::NavSatFix gps_pos;
 //geometry_msgs::Vector3Stamped imu_mag;
 std_msgs::Int8MultiArray cmd_array;
+std_msgs::Int8MultiArray cone_cmd_array;
 sensor_msgs::LaserScan filtered_scan;
 sensor_msgs::LaserScan scan;
 
 ros::Publisher pub_filtered_scan;
 ros::Publisher pub_arb;
+ros::Publisher cone_pub_arb;
 
 std::vector<float> average_ranges;
 int rolling_length = 5;
@@ -39,6 +42,8 @@ int straight[22] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 int left[22] =     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0};
+
+std::vector<int> cone_command(202,0);
 
 /*void turnToGoal(const sensor_msgs::NavSatFix goal_arr)
 {
@@ -152,6 +157,8 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
     ROS_INFO("average_range: %f", average_range);
     ROS_INFO("rolling_average_range: %f", rolling_average_range);
 
+
+    
     if(rolling_average_range < 0.5)
         cmd_array.data.assign(right5, right5+22);
     else if(rolling_average_range < 0.6)
@@ -161,7 +168,7 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
     else if(rolling_average_range < 1.5)
         cmd_array.data.assign(straight, straight+22);
     else if(rolling_average_range > 1.65)
-	cmd_array.data.assign(straight, straight+22);
+	    cmd_array.data.assign(straight, straight+22);
     else
         cmd_array.data.assign(left, left+22);
 
@@ -170,6 +177,49 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
   pub_arb.publish(cmd_array);
   cmd_array.data.clear();
 
+}
+int cone_height_threshold = 30;
+int left_threshold = 160;
+int right_threshold = 480;
+void cone_callback(const std_msgs::Int8MultiArray cone_array)
+{
+    std::vector<int> cone_xs;
+    std::vector<int> cone_ys;
+    std::vector<int> cone_widths;
+    std::vector<int> cone_heights;
+
+    int cone_array_length = cone_array.data.size();
+
+    for(int i = 0; i < cone_array_length; i+=4)
+    {
+        if(cone_array.data[i+3] > cone_height_threshold)
+        {
+            cone_xs.push_back(cone_array.data[i]);
+            cone_ys.push_back(cone_array.data[i+1]);
+            cone_widths.push_back(cone_array.data[i+2]);
+            cone_heights.push_back(cone_array.data[i+3]);
+        }
+    }
+
+    int cone_direction = 0; //stores the direction we need to end up turning
+
+    for (int i = 0; i < cone_xs.size(); i++)
+    {
+        if(cone_xs[i] > left_threshold && cone_xs[i] < 320) //Do we need to turn right away from a cone?
+            cone_direction -= 5;
+        else if(cone_xs[i] > 320 && cone_xs[i] < right_threshold) //Do we need to turn left away from a cone?
+            cone_direction += 5;
+    }
+
+    if(cone_direction)
+    {
+        cone_command[151+cone_direction] = 5;
+    }
+
+    else
+    {
+        std::fill(cone_command.begin(),cone_command.end(),0);
+    }
 }
 
 int main(int argc, char **argv)
@@ -184,6 +234,8 @@ int main(int argc, char **argv)
   ros::Subscriber sub_imu = n.subscribe("imu/mag", 1000, getIMU); */
 
   ros::Subscriber sub_lidar = n.subscribe("scan",1000,getLIDAR);
+
+  ros::Subscriber sub_cones = n.subscribe("cone_positions",1000,cone_callback);
 
   pub_arb = n.advertise<std_msgs::Int8MultiArray>("wpt/cmd_vel", 1000);
 
