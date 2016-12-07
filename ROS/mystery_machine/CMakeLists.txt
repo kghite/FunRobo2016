@@ -15,5 +15,5 @@ target_link_libraries(forebrain ${catkin_LIBRARIES})
 add_executable(midbrain src/midbrain.cpp)
 target_link_libraries(midbrain ${catkin_LIBRARIES})
 
-add_executable(camera_subscriber src/camera_subscriber.cpp)
-target_link_libraries(camera_subscriber ${catkin_LIBRARIES} ${OpenCV_LIBS})
+add_executable(cone_detection src/cone_detection.cpp)
+target_link_libraries(cone_detection ${catkin_LIBRARIES} ${OpenCV_LIBS})
