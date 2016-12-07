@@ -46,7 +46,7 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
   // Calculate output array using some portion of scan
   for (long i = number_of_ranges/3; i<2*number_of_ranges/3;i++)
   {
-      if (forward_distance > scan.ranges[i])
+      if (forward_distance > scan.ranges[i] && scan.ranges[i] != 0)
           forward_distance = scan.ranges[i];
   }
 
