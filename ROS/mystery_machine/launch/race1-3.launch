@@ -6,9 +6,8 @@
 	<!-- Laser -->
 	<node pkg="hokuyo_node" type="hokuyo_node" name="hokuyo_node" args="/dev/ttyACM0" />
 
-	<node pkg="uvc_camera" type="uvc_camera_node" name="uvc_camera_node">
-		<param name="_device" value="/dev/video0"/>
-	</node>
+	<!-- Camera -->
+	<node pkg="uvc_camera" type="uvc_camera_node" name="camera_node" args="/dev/video0" />
 
 	<!-- Midbrain -->
 	<node pkg="mystery_machine" type="midbrain" name="midbrain" />
