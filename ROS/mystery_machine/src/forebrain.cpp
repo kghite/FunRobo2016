@@ -152,13 +152,13 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
     ROS_INFO("average_range: %f", average_range);
     ROS_INFO("rolling_average_range: %f", rolling_average_range);
 
-    if(average_range < 0.4)
+    if(rolling_average_range < 0.5)
         cmd_array.data.assign(right5, right5+22);
-    else if(average_range < 0.5)
+    else if(rolling_average_range < 0.6)
         cmd_array.data.assign(right3, right3+22);
-    else if(average_range < 0.6)
+    else if(rolling_average_range < 0.7)
         cmd_array.data.assign(right1, right1+22);
-    else if(average_range < 0.7)
+    else if(rolling_average_range < 0.8)
         cmd_array.data.assign(straight, straight+22);
     else
         cmd_array.data.assign(left, left+22);
