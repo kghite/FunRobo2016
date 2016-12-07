@@ -44,6 +44,9 @@ Adafruit_TiCoServo turn_channel;
 int linear_vel =  0;
 int angular_vel = 0;
 
+int current_linear_vel = 0;
+int current_angular_vel = 0;
+
 //Define estop pin
 const byte ESTOP_PIN = 42;
 
@@ -209,10 +212,21 @@ void update_motors(){
   if (ir_estop == 1 || odroid_estop == 1){
    forward_channel.write(90);
     turn_channel.write(90);
+    current_linear_vel = 0;
+    current_angular_vel = 0;
   }
   else{
-    forward_channel.write(90 - linear_vel);
-    turn_channel.write(90 - angular_vel);
+    forward_channel.write(90 + current_linear_vel);
+    turn_channel.write(90 + current_angular_vel);
+    if (linear_vel > current_linear_vel)
+      current_linear_vel += 1;
+    else if (linear_vel < current_linear_vel)
+      current_linear_vel -= 1;
+      
+    if (angular_vel > current_angular_vel)
+      current_angular_vel += 1;
+    else if (angular_vel < current_linear_vel)
+      current_angular_vel -= 1;
   }
 }
 

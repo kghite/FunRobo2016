@@ -7,6 +7,7 @@
 #include <fstream>
 #include <string> // Read waypoint file
 #include <stdlib.h> // Convert strings to floats
+#include <math.h>
 #include "ros/ros.h"
 #include "sensor_msgs/NavSatFix.h" // GPS data
 #include "std_msgs/Float64.h" // Theta output
@@ -19,6 +20,9 @@ geometry_msgs::Vector3Stamped imu_mag;
 // File Input: waypoints
 float waypoints[10];
 
+// Keep track of how many waypoints we have reached
+int waypoint_status = 0;
+
 // Output: theta
 std_msgs::Float64 theta;
 ros::Publisher pub_theta;
@@ -28,32 +32,6 @@ void getGPS(const sensor_msgs::NavSatFix gps)
 {
   ROS_INFO("Received GPS Data");
   gps_pos = gps;
-}
-
-
-void getCompass(const geometry_msgs::Vector3Stamped imu)
-{
-  ROS_INFO("Received Compass Data");
-  imu_mag = imu;
-
-  // Read in the current waypoint goal
-
-  // Break down lat and long of gps position
-  float gps_lat = gps_pos.latitude;
-  float gps_long = gps_pos.longitude;
-
-  // Break down IMU mag data
-  float compass = imu_mag.vector.x;
-
-  // Calculate angle from robot to waypoint goal
-  // theta from east = atan(long_g - long_r, lat_g - lat_r) * (180/pi)
-  // translate robot compass data into robot angle from east
-
-  // DEBUG
-  ROS_INFO("GPS lat: %f", gps_lat);
-  ROS_INFO("GPS long: %f", gps_long);
-  ROS_INFO("IMU Mag X: %f", compass);
-  ROS_INFO("Publishing Output");
 }
 
 void readGoals()
@@ -71,6 +49,53 @@ void readGoals()
 
     wp_num++;
   }
+}
+
+
+void getCompass(const geometry_msgs::Vector3Stamped imu)
+{
+  ROS_INFO("Received Compass Data");
+  imu_mag = imu;
+
+  // Break down lat and long of gps position
+  float robot_lat = gps_pos.latitude;
+  float robot_long = gps_pos.longitude;
+
+  // Goal GPS points
+  float goal_lat = waypoints[waypoint_status];
+  float goal_long = waypoints[waypoint_status + 1];
+
+  // Check if we have reached the current goal
+  if (goal_lat == robot_lat && goal_long == robot_long)
+  {
+    waypoint_status++;
+
+    // Recompute new gps waypoints
+    goal_lat = waypoints[waypoint_status];
+    goal_long = waypoints[waypoint_status + 1];
+  }
+
+  // Break down IMU mag data
+  float compass_x = imu_mag.vector.x;
+  float compass_y = imu_mag.vector.y;
+
+  // Compute robot heading (0-360) and reference East as 0
+  float heading = (atan2(compass_y, compass_x) * 180) / M_PI;
+  if (heading < 0)
+  {
+    heading = 180 + (180 - (heading * -1));
+  }
+  float theta_r = heading + 90;
+
+  // Calculate angle from the waypoint goal to East
+  float theta_g = atan2(robot_long - goal_long, robot_lat - robot_long) * (180/M_PI);
+
+  // Calculate angle for robot to move
+  float theta = theta_g - theta_r;
+
+  // DEBUG
+  ROS_INFO("Robot Heading: %f", theta_r);
+  ROS_INFO("Heading to Goal: %f", theta);
 }
 
 
