@@ -23,13 +23,13 @@ ros::Publisher pub_filtered_scan;
 ros::Publisher pub_arb;
 
 std::vector<float> average_ranges;
-int rolling_length = 100;
+int rolling_length = 5;
 
 int right1[22] =   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0};
+                    0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0};
 
 int right3[22] =   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0};
+                    0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 int right5[22] =   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -38,7 +38,7 @@ int straight[22] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0};
 
 int left[22] =     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0};
+                    0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0};
 
 /*void turnToGoal(const sensor_msgs::NavSatFix goal_arr)
 {
@@ -120,7 +120,7 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
 
     int distances_counted = 0;
 
-    for(float i = number_of_ranges/6; i < number_of_ranges / 4; i++)
+    for(float i = number_of_ranges/6+42; i < number_of_ranges / 4+42; i++)
     {
         if(!isnan(filtered_scan.ranges[i])) {
             average_range += filtered_scan.ranges[i];
@@ -146,20 +146,22 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
     average_ranges.push_back(average_range);
 
     // Calculate running average of ranges
-    rolling_average_range = std::accumulate(average_ranges.begin(),	\
-      average_ranges.end(), 0) / average_ranges.size();
+    rolling_average_range = 1.0 * std::accumulate(average_ranges.begin(),	\
+      average_ranges.end(), 0.0) / average_ranges.size();
 
     ROS_INFO("average_range: %f", average_range);
     ROS_INFO("rolling_average_range: %f", rolling_average_range);
 
-    if(average_range < 0.4)
+    if(rolling_average_range < 0.5)
         cmd_array.data.assign(right5, right5+22);
-    else if(average_range < 0.5)
+    else if(rolling_average_range < 0.6)
         cmd_array.data.assign(right3, right3+22);
-    else if(average_range < 0.6)
+    else if(rolling_average_range < 1.2)
         cmd_array.data.assign(right1, right1+22);
-    else if(average_range < 0.7)
+    else if(rolling_average_range < 1.5)
         cmd_array.data.assign(straight, straight+22);
+    else if(rolling_average_range > 1.65)
+	cmd_array.data.assign(straight, straight+22);
     else
         cmd_array.data.assign(left, left+22);
 
