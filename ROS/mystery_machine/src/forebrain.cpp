@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+#include <numeric>
 #include "ros/ros.h"
 #include "geometry_msgs/Vector3Stamped.h"
 #include "sensor_msgs/NavSatFix.h"
@@ -21,6 +22,9 @@ sensor_msgs::LaserScan scan;
 ros::Publisher pub_filtered_scan;
 ros::Publisher pub_arb;
 
+std::vector<float> average_ranges;
+int rolling_length = 100;
+
 int right1[22] =   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0};
 
@@ -30,7 +34,7 @@ int right3[22] =   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 int right5[22] =   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-int straight[22] =     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+int straight[22] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0};
 
 int left[22] =     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -98,7 +102,9 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
 
   long number_of_ranges = lidar_scan.ranges.size();
 
-  float average_range = 0;
+  float average_range = 0.0;
+
+  float rolling_average_range = 0.0;
 
   // Remove junk values from scan data (0.0 is out of range or no read)
   for(int i=0; i < number_of_ranges; i++)
@@ -127,9 +133,24 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
         filtered_scan.ranges[i] = 0;
     }
 
+    // Calculate average range
     average_range /= distances_counted;
 
-    ROS_INFO("%f",average_range);
+    // Remove oldest range if vector is of certain size
+    if (average_ranges.size() == rolling_length)
+    {
+      average_ranges.erase(average_ranges.begin(), average_ranges.begin()+1);
+    }
+
+    // Add newest range to vector
+    average_ranges.push_back(average_range);
+
+    // Calculate running average of ranges
+    rolling_average_range = std::accumulate(average_ranges.begin(),	\
+      average_ranges.end(), 0) / average_ranges.size();
+
+    ROS_INFO("average_range: %f", average_range);
+    ROS_INFO("rolling_average_range: %f", rolling_average_range);
 
     if(average_range < 0.4)
         cmd_array.data.assign(right5, right5+22);
