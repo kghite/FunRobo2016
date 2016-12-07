@@ -5,7 +5,7 @@ from std_msgs.msg import Int8MultiArray
 from geometry_msgs.msg import Twist
 import numpy as np
 
-ARRAY_SIZE = 11
+ARRAY_SIZE = 101
 INPUTS = ['wpt', 'obst']
 
 class Midbrain_Arbiter(object):
@@ -13,9 +13,9 @@ class Midbrain_Arbiter(object):
 		rospy.init_node('midbrain_arbiter')
 
 		self.vel_array = np.zeros([len(INPUTS), ARRAY_SIZE])
-		self.vel_array[:,5] = 1
+		self.vel_array[:,49] = 1
 		self.turn_array = np.zeros([len(INPUTS), ARRAY_SIZE])
-		self.turn_array[:,5] = 1
+		self.turn_array[:,49] = 1
 
 		rospy.Subscriber('wpt/cmd_vel', Int8MultiArray, self.wpt_cmd_vel_cb)
 		rospy.Subscriber('obst/cmd_vel', Int8MultiArray, self.obst_cmd_vel_cb)
