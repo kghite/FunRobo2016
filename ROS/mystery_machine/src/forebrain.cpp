@@ -47,7 +47,7 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
   int lin_vel = 0;
   int ang_vel = 0;
   std::vector<int> wall_vel_command;
-  std::vector<int> final_vel_command;
+  std::vector<int> final_vel_command(202,0);
 
   scan.ranges = lidar_scan.ranges;
   filtered_scan.ranges = lidar_scan.ranges;
@@ -57,13 +57,12 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
   filtered_scan.angle_increment = lidar_scan.angle_increment;
   filtered_scan.range_max = lidar_scan.range_max;
   filtered_scan.range_min = lidar_scan.range_min;
-  std::vector<int> indices;
 
   long number_of_ranges = lidar_scan.ranges.size();
 
   float average_range = 0.0;
 
-  float rolling_average_range = 0.0;
+  float rolling_average_range;
 
   // Remove junk values from scan data (0.0 is out of range or no read)
   for(int i=0; i < number_of_ranges; i++)
