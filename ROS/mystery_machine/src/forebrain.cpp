@@ -28,72 +28,26 @@ ros::Publisher cone_pub_arb;
 std::vector<float> average_ranges;
 int rolling_length = 5;
 
-int right1[22] =   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0};
+std::vector<int> cone_vel_command(202,0);
 
-int right3[22] =   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+// Object weights that get passed to the arbiter
+const int WALL = 1;
+const int CONE = 2;
 
-int right5[22] =   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-int straight[22] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0};
-
-int left[22] =     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0};
-
-std::vector<int> cone_command(202,0);
-
-/*void turnToGoal(const sensor_msgs::NavSatFix goal_arr)
+// input ang from -50 to 50
+std::vector<int> set_vel_vector(int object_weight, int ang)
 {
-  // DEBUG
-  ROS_INFO("Received Goal");
-
-  // Break down lat and long of goal waypoint
-  float goal_lat = goal_arr.latitude;
-  float goal_long = goal_arr.longitude;
-
-  // Break down lat and long of gps position
-  float gps_lat = gps_pos.latitude;
-  float gps_long = gps_pos.longitude;
-
-  // Break down IMU mag data
-  float imu_mag_x = imu_mag.vector.x;
-  float imu_mag_y = imu_mag.vector.y;
-  float imu_mag_z = imu_mag.vector.z;
-
-  // Calculate angle from goal waypoint
-
-  // Translate to array for arbiter (set cmd_array)
-  
-
-  // DEBUG
-  ROS_INFO("Waypoint lat: %f", goal_lat);
-  ROS_INFO("Waypoint long: %f", goal_long);
-  ROS_INFO("GPS lat: %f", gps_lat);
-  ROS_INFO("GPS long: %f", gps_long);
-  ROS_INFO("IMU Mag X: %f", imu_mag_x);
-  ROS_INFO("IMU Mag Y: %f", imu_mag_y);
-  ROS_INFO("IMU Mag Z: %f", imu_mag_z);
-  ROS_INFO("Publishing Output");
+  std::vector<int> vel(202, 0);
+  vel.at(ang+151) = object_weight;
+  return vel;
 }
-
-void getGPS(const sensor_msgs::NavSatFix gps) 
-{
-  gps_pos = gps;
-}
-
-void getIMU(const geometry_msgs::Vector3Stamped imu)
-{
-  imu_mag = imu;
-} */
-
-
 
 void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
 {
-  //ROS_INFO("Received Scan");
+  int lin_vel = 0;
+  int ang_vel = 0;
+  std::vector<int> wall_vel_command;
+  std::vector<int> final_vel_command;
 
   scan.ranges = lidar_scan.ranges;
   filtered_scan.ranges = lidar_scan.ranges;
@@ -151,75 +105,108 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
     average_ranges.push_back(average_range);
 
     // Calculate running average of ranges
-    rolling_average_range = 1.0 * std::accumulate(average_ranges.begin(),	\
+    rolling_average_range = 1.0 * std::accumulate(average_ranges.begin(), \
       average_ranges.end(), 0.0) / average_ranges.size();
 
     ROS_INFO("average_range: %f", average_range);
     ROS_INFO("rolling_average_range: %f", rolling_average_range);
-
-
     
     if(rolling_average_range < 0.5)
-        cmd_array.data.assign(right5, right5+22);
+    {
+      ROS_INFO("-3");
+      //ang_vel -= 5;
+      ang_vel = -15;
+    }
     else if(rolling_average_range < 0.6)
-        cmd_array.data.assign(right3, right3+22);
+    {
+      ROS_INFO("-2");
+      //ang_vel -= 3;
+      ang_vel = -10;
+    }
     else if(rolling_average_range < 1.2)
-        cmd_array.data.assign(right1, right1+22);
+    {
+      ROS_INFO("-1");
+      //ang_vel -= 1;
+      ang_vel = -5;
+    }
     else if(rolling_average_range < 1.5)
-        cmd_array.data.assign(straight, straight+22);
-    else if(rolling_average_range > 1.65)
-	    cmd_array.data.assign(straight, straight+22);
+    {
+      ROS_INFO("00");
+      //ang_vel += 1;
+      ang_vel = 0;
+    }
+    else if(rolling_average_range < 1.65)
+    {
+      ROS_INFO("+1");
+      //ang_vel += 5;
+      ang_vel = 10;
+    }
     else
-        cmd_array.data.assign(left, left+22);
+    {
+      ROS_INFO("+2");
+      ang_vel = 0;
+    }
 
-  pub_filtered_scan.publish(filtered_scan);
+    // Set the wall_vel_command slider for the given ang_vel
+    wall_vel_command = set_vel_vector(WALL, ang_vel);
 
-  pub_arb.publish(cmd_array);
-  cmd_array.data.clear();
+    // Add wall and cone velocity sliders
+    for (int i=0; i<wall_vel_command.size(); i++)
+    {
+      final_vel_command[i] = wall_vel_command[i] + cone_vel_command[i];
+    }
 
+    // Make an array copy of the final_vel_command slider vector
+    int* final_vel_arr = &final_vel_command[0];
+    cmd_array.data.assign(final_vel_arr, final_vel_arr+202);
+
+    pub_filtered_scan.publish(filtered_scan);
+
+    pub_arb.publish(cmd_array);
+    cmd_array.data.clear();
 }
+
 int cone_height_threshold = 30;
 int left_threshold = 160;
 int right_threshold = 480;
 void cone_callback(const std_msgs::Int8MultiArray cone_array)
 {
-    std::vector<int> cone_xs;
-    std::vector<int> cone_ys;
-    std::vector<int> cone_widths;
-    std::vector<int> cone_heights;
+  std::vector<int> cone_xs;
+  std::vector<int> cone_ys;
+  std::vector<int> cone_widths;
+  std::vector<int> cone_heights;
 
-    int cone_array_length = cone_array.data.size();
+  int cone_array_length = cone_array.data.size();
 
-    for(int i = 0; i < cone_array_length; i+=4)
+  // Track x,y,width,height of cones that are tall enough
+  for(int i = 0; i < cone_array_length; i+=4)
+  {
+    if(cone_array.data[i+3] > cone_height_threshold)
     {
-        if(cone_array.data[i+3] > cone_height_threshold)
-        {
-            cone_xs.push_back(cone_array.data[i]);
-            cone_ys.push_back(cone_array.data[i+1]);
-            cone_widths.push_back(cone_array.data[i+2]);
-            cone_heights.push_back(cone_array.data[i+3]);
-        }
+      cone_xs.push_back(cone_array.data[i]);
+      cone_ys.push_back(cone_array.data[i+1]);
+      cone_widths.push_back(cone_array.data[i+2]);
+      cone_heights.push_back(cone_array.data[i+3]);
     }
+  }
 
-    int cone_direction = 0; //stores the direction we need to end up turning
+  // Store the direction we need to end up turning
+  int ang_vel = 0;
 
-    for (int i = 0; i < cone_xs.size(); i++)
-    {
-        if(cone_xs[i] > left_threshold && cone_xs[i] < 320) //Do we need to turn right away from a cone?
-            cone_direction -= 5;
-        else if(cone_xs[i] > 320 && cone_xs[i] < right_threshold) //Do we need to turn left away from a cone?
-            cone_direction += 5;
-    }
+  for (int i = 0; i < cone_xs.size(); i++)
+  {
+    //Do we need to turn right away from a cone?
+    if(cone_xs[i] > left_threshold && cone_xs[i] < 320)
+      //ang_vel = -10;
+      ang_vel -= 10;
+    //Do we need to turn left away from a cone?
+    else if(cone_xs[i] > 320 && cone_xs[i] < right_threshold)      
+      //ang_vel = 10;
+      ang_vel += 10;
+  }
 
-    if(cone_direction)
-    {
-        cone_command[151+cone_direction] = 5;
-    }
-
-    else
-    {
-        std::fill(cone_command.begin(),cone_command.end(),0);
-    }
+  // Define the cone_vel_command slider based on given ang_vel
+  cone_vel_command = set_vel_vector(CONE, ang_vel);
 }
 
 int main(int argc, char **argv)

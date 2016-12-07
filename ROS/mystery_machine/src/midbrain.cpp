@@ -14,19 +14,28 @@
 ros::Publisher *pub_arb;
 sensor_msgs::LaserScan scan;
 std_msgs::Int8MultiArray cmd_array;
-int backward[22] = {0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-int stop[22] =     {0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-int forward[22] =  {0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+// Speed to move forward with
+int lin_vel = 0;
+
+// Final velocity slider
+std::vector<int> final_vel_command;
+
+// Object weights that get passed to the arbiter
+const int WALL = 1;
+
+// input lin from -50 to 50
+std::vector<int> set_vel_vector(int object_weight, int lin)
+{
+  std::vector<int> vel(202, 0);
+  vel.at(lin+50) = object_weight;
+  return vel;
+}
 
 void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
 {
   // DEBUG
   ROS_INFO("Received Scan");
-
-
 
   // Assign LIDAR scan to global
   scan = lidar_scan;
@@ -50,32 +59,31 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
           forward_distance = scan.ranges[i];
   }
 
-
   ROS_INFO("Forward distance: %lf", forward_distance);
   if (forward_distance < .3)
   {
     // Move backward
     ROS_INFO("Backward");
-    cmd_array.data.assign(backward, backward+22);
+    lin_vel = -20;
   }
   else if (forward_distance < .6)
   {
     // Stop
     ROS_INFO("Stop");
-    cmd_array.data.assign(stop, stop+22);
+    lin_vel = 0;
   }
   else
   {
     // Move forward
     ROS_INFO("Forward");
-    cmd_array.data.assign(forward, forward+22);
-    //ROS_INFO_STREAM(cmd_array);
+    lin_vel = 20;
   }
 
-  // for (int i=0; i<22; i++)
-  // {
-  //   ROS_INFO("%d, ", cmd_array.data.at(i));
-  // }
+  // Define final_vel_command slider based on given lin_vel
+  final_vel_command = set_vel_vector(WALL, lin_vel);
+
+  int* final_vel_arr = &final_vel_command[0];
+  cmd_array.data.assign(final_vel_arr, final_vel_arr+202);
 
   pub_arb->publish(cmd_array);
   cmd_array.data.clear();
@@ -87,7 +95,12 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
 
 int main(int argc, char **argv)
 {
-  cmd_array.data.assign(&stop[0], &stop[0]+22);
+  // Define the final_vel_command slider based on given lin_vel
+  final_vel_command = set_vel_vector(WALL, lin_vel);
+
+  // Make an array copy of the final_vel_command slider vector
+  int* final_vel_arr = &final_vel_command[0];
+  cmd_array.data.assign(final_vel_arr, final_vel_arr+202);
 
   ros::init(argc, argv, "midbrain");
 

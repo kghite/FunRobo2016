@@ -6,7 +6,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <std_msgs/Int16MultiArray.h>
+#include <std_msgs/Int8MultiArray.h>
 
 namespace enc = sensor_msgs::image_encodings;
 
@@ -53,8 +53,8 @@ void callback(const sensor_msgs::ImageConstPtr& original_image)
     cv::findContours(img_mask, contours, hierarchy, cv::RETR_TREE, \
 		     cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
 
-    std::vector<int16_t> cone_pos;
-    std_msgs::Int16MultiArray cone_pos_msg;
+    std::vector<int8_t> cone_pos;
+    std_msgs::Int8MultiArray cone_pos_msg;
     std::vector<std::vector<cv::Point> > contours_poly( contours.size() );
     std::vector<cv::Rect> boundRect(contours.size());
     cv::Scalar color = cv::Scalar(255, 0, 0);
@@ -102,7 +102,7 @@ int main(int argc, char **argv)
 
     ros::NodeHandle nh;
 
-    pub = nh.advertise<std_msgs::Int16MultiArray>("cone_positions", 1000);
+    pub = nh.advertise<std_msgs::Int8MultiArray>("cone_positions", 1000);
 
     image_transport::ImageTransport it(nh);
 
