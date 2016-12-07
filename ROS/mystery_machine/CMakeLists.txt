@@ -17,3 +17,6 @@ target_link_libraries(midbrain ${catkin_LIBRARIES})
 
 add_executable(cone_detection src/cone_detection.cpp)
 target_link_libraries(cone_detection ${catkin_LIBRARIES} ${OpenCV_LIBS})
+
+add_executable(waypoint_follower src/waypoint_follower.cpp)
+target_link_libraries(waypoint_follower ${catkin_LIBRARIES})
