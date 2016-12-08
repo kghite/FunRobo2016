@@ -123,11 +123,11 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
 
     ROS_INFO("Inf count %i", inf_count);
 
-    if(inf_count > 2 && inf_count < 5)
-    {
-      ang_vel = -5;
-    } 
-    else if(rolling_average_range < 1.0)
+//    if(inf_count > 2 && inf_count < 5)
+//    {
+//      ang_vel = -5;
+//    } 
+    if(rolling_average_range < 1.0)
     {
       //ROS_INFO("-3");
       //ang_vel -= 5;
