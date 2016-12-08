@@ -25,12 +25,12 @@ static const std::string contoured_window = "Contoured";
 // int upperV = 256;
 
 // Detecting cones indoors
-int blur = 25;
+int blur = 3;
 int lowerH = 3;
-int upperH = 8;
+int upperH = 16;
 int lowerS = 124;
 int upperS = 190;
-int lowerV = 255;
+int lowerV = 211;
 int upperV = 256;
 int erosion_size = 0;
 int dilation_size = 10;
