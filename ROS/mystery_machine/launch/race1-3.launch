@@ -8,7 +8,7 @@
 
 	<!-- Camera -->
 	<node pkg="uvc_camera" type="uvc_camera_node" name="uvc_camera_node" >
-		<param name="device" value="/dev/video1" />
+		<param name="device" value="/dev/video0" />
 	</node>
 	<!-- Midbrain -->
 	<node pkg="mystery_machine" type="midbrain" name="midbrain" />

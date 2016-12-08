@@ -67,7 +67,7 @@ void callback(const sensor_msgs::ImageConstPtr& original_image)
 		cv::Scalar(upperH, upperS, upperV), img_mask);
     cv::erode(img_mask, img_mask, erosion_element);
     cv::dilate(img_mask, img_mask, dilation_element);
-    cv::imshow(filtered_window, img_mask);
+    //cv::imshow(filtered_window, img_mask);
     
     // Find contours
     cv::findContours(img_mask, contours, hierarchy, cv::RETR_TREE, \
@@ -108,7 +108,7 @@ void callback(const sensor_msgs::ImageConstPtr& original_image)
       }
     }
 
-    cv::imshow(raw_window, cv_ptr->image);
+    //cv::imshow(raw_window, cv_ptr->image);
     cv::waitKey(3);
 
     // Convert from OpenCV image to ROS image message and publish
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
     const std::string control_window = "Filter Controls";
 
     // Create filter control window
-    cv::namedWindow(control_window);
+/*    cv::namedWindow(control_window);
     cv::createTrackbar("blur", control_window, &blur, 50, NULL);
     cv::createTrackbar("lowerH", control_window, &lowerH, 180, NULL);
     cv::createTrackbar("upperH", control_window, &upperH, 180, NULL);
@@ -143,6 +143,6 @@ int main(int argc, char **argv)
       50, NULL);
     cv::createTrackbar("dilation_sizie", control_window, &dilation_size, \
       50, NULL);
-
+*/
     ros::spin();
 }
