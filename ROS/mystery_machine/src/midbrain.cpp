@@ -64,7 +64,7 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
   {
     // Move backward
     ROS_INFO("Backward");
-    lin_vel = -10;
+    lin_vel = -5;
   }
   else if (forward_distance < .6)
   {
@@ -76,7 +76,7 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
   {
     // Move forward
     ROS_INFO("Forward");
-    lin_vel = 10;
+    lin_vel = 5;
   }
 
   // Define final_vel_command slider based on given lin_vel
