@@ -164,7 +164,7 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
     cmd_array.data.clear();
 }
 
-int cone_height_threshold = 100;
+int cone_height_threshold = 5;
 int left_threshold = 160;
 int right_threshold = 480;
 void cone_callback(const std_msgs::Int16MultiArray cone_array)

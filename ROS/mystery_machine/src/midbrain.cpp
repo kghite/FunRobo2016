@@ -79,6 +79,8 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
     lin_vel = 20;
   }
 
+  ROS_INFO_STREAM(lin_vel);
+
   // Define final_vel_command slider based on given lin_vel
   final_vel_command = set_vel_vector(WALL, lin_vel);
 
