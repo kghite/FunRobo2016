@@ -108,31 +108,31 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
     //ROS_INFO("average_range: %f", average_range);
     //ROS_INFO("rolling_average_range: %f", rolling_average_range);
     
-    if(rolling_average_range < 0.5)
+    if(rolling_average_range < 1.0)
     {
       //ROS_INFO("-3");
       //ang_vel -= 5;
       ang_vel = -15;
     }
-    else if(rolling_average_range < 0.6)
+    else if(rolling_average_range < 1.1)
     {
       //ROS_INFO("-2");
       //ang_vel -= 3;
       ang_vel = -10;
     }
-    else if(rolling_average_range < .8)
+    else if(rolling_average_range < 1.3)
     {
       //ROS_INFO("-1");
       //ang_vel -= 1;
       ang_vel = -5;
     }
-    else if(rolling_average_range < 1)
+    else if(rolling_average_range < 1.5)
     {
       //ROS_INFO("00");
       //ang_vel += 1;
       ang_vel = 0;
     }
-    else if(rolling_average_range < 1.2)
+    else if(rolling_average_range < 1.7)
     {
       //ROS_INFO("+1");
       //ang_vel += 5;
@@ -141,6 +141,7 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
     else
     {
       //ROS_INFO("+2");
+      // Gentle left if we don't see a wall
       ang_vel = 5;
     }
 
@@ -237,7 +238,7 @@ int main(int argc, char **argv)
 
   ros::Subscriber sub_lidar = n.subscribe("scan",1000,getLIDAR);
 
-  ros::Subscriber sub_cones = n.subscribe("cone_positions",1000,cone_callback);
+  //ros::Subscriber sub_cones = n.subscribe("cone_positions",1000,cone_callback);
 
   pub_arb = n.advertise<std_msgs::Int8MultiArray>("wpt/cmd_vel", 1000);
 
