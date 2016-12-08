@@ -14,8 +14,6 @@
 #include "std_msgs/Int16MultiArray.h"
 #include "sensor_msgs/LaserScan.h"
 
-//sensor_msgs::NavSatFix gps_pos;
-//geometry_msgs::Vector3Stamped imu_mag;
 std_msgs::Int8MultiArray cmd_array;
 std_msgs::Int8MultiArray cone_cmd_array;
 sensor_msgs::LaserScan filtered_scan;
@@ -47,7 +45,7 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
   int lin_vel = 0;
   int ang_vel = 0;
   std::vector<int> wall_vel_command;
-  std::vector<int> final_vel_command;
+  std::vector<int> final_vel_command(202,0);
 
   scan.ranges = lidar_scan.ranges;
   filtered_scan.ranges = lidar_scan.ranges;
@@ -57,13 +55,12 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
   filtered_scan.angle_increment = lidar_scan.angle_increment;
   filtered_scan.range_max = lidar_scan.range_max;
   filtered_scan.range_min = lidar_scan.range_min;
-  std::vector<int> indices;
 
   long number_of_ranges = lidar_scan.ranges.size();
 
   float average_range = 0.0;
 
-  float rolling_average_range = 0.0;
+  float rolling_average_range;
 
   // Remove junk values from scan data (0.0 is out of range or no read)
   for(int i=0; i < number_of_ranges; i++)
@@ -108,47 +105,48 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
     rolling_average_range = 1.0 * std::accumulate(average_ranges.begin(), \
       average_ranges.end(), 0.0) / average_ranges.size();
 
-    ROS_INFO("average_range: %f", average_range);
-    ROS_INFO("rolling_average_range: %f", rolling_average_range);
+    //ROS_INFO("average_range: %f", average_range);
+    //ROS_INFO("rolling_average_range: %f", rolling_average_range);
     
     if(rolling_average_range < 0.5)
     {
-      ROS_INFO("-3");
+      //ROS_INFO("-3");
       //ang_vel -= 5;
       ang_vel = -15;
     }
     else if(rolling_average_range < 0.6)
     {
-      ROS_INFO("-2");
+      //ROS_INFO("-2");
       //ang_vel -= 3;
       ang_vel = -10;
     }
     else if(rolling_average_range < 1.2)
     {
-      ROS_INFO("-1");
+      //ROS_INFO("-1");
       //ang_vel -= 1;
       ang_vel = -5;
     }
     else if(rolling_average_range < 1.5)
     {
-      ROS_INFO("00");
+      //ROS_INFO("00");
       //ang_vel += 1;
       ang_vel = 0;
     }
     else if(rolling_average_range < 1.65)
     {
-      ROS_INFO("+1");
+      //ROS_INFO("+1");
       //ang_vel += 5;
       ang_vel = 10;
     }
     else
     {
-      ROS_INFO("+2");
+      //ROS_INFO("+2");
       ang_vel = 0;
     }
 
     // Set the wall_vel_command slider for the given ang_vel
     wall_vel_command = set_vel_vector(WALL, ang_vel);
+    //ROS_INFO("Wall ang_vel: %d", ang_vel);
 
     // Add wall and cone velocity sliders
     for (int i=0; i<wall_vel_command.size(); i++)
@@ -166,10 +164,10 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
     cmd_array.data.clear();
 }
 
-int cone_height_threshold = 30;
+int cone_height_threshold = 100;
 int left_threshold = 160;
 int right_threshold = 480;
-void cone_callback(const std_msgs::Int8MultiArray cone_array)
+void cone_callback(const std_msgs::Int16MultiArray cone_array)
 {
   std::vector<int> cone_xs;
   std::vector<int> cone_ys;
@@ -181,6 +179,7 @@ void cone_callback(const std_msgs::Int8MultiArray cone_array)
   // Track x,y,width,height of cones that are tall enough
   for(int i = 0; i < cone_array_length; i+=4)
   {
+    ROS_INFO("Cone height: %d", cone_array.data[i+3]);
     if(cone_array.data[i+3] > cone_height_threshold)
     {
       cone_xs.push_back(cone_array.data[i]);
@@ -207,6 +206,7 @@ void cone_callback(const std_msgs::Int8MultiArray cone_array)
 
   // Define the cone_vel_command slider based on given ang_vel
   cone_vel_command = set_vel_vector(CONE, ang_vel);
+  ROS_INFO("Cone ang_vel: %d", ang_vel);
 }
 
 int main(int argc, char **argv)

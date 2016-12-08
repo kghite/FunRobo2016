@@ -6,10 +6,9 @@
 #include <sensor_msgs/image_encodings.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <std_msgs/Int8MultiArray.h>
+#include <std_msgs/Int16MultiArray.h>
 
 namespace enc = sensor_msgs::image_encodings;
-
 ros::Publisher pub;
  
 static const std::string raw_window = "Raw";
@@ -17,13 +16,26 @@ static const std::string filtered_window = "Filtered";
 static const std::string contoured_window = "Contoured";
 
 // Define initial filter parameters
-int blur = 3;
-int lowerH = 0;
-int upperH = 23;
-int lowerS = 165;
-int upperS = 256;
-int lowerV = 203;
+// int blur = 3;
+// int lowerH = 0;
+// int upperH = 23;
+// int lowerS = 165;
+// int upperS = 256;
+// int lowerV = 203;
+// int upperV = 256;
+
+// Detecting cones indoors
+int blur = 25;
+int lowerH = 3;
+int upperH = 8;
+int lowerS = 124;
+int upperS = 190;
+int lowerV = 255;
 int upperV = 256;
+int erosion_size = 0;
+int dilation_size = 10;
+int erosion_type = cv::MORPH_RECT;
+int dilation_type = cv::MORPH_RECT;
 
 void callback(const sensor_msgs::ImageConstPtr& original_image)
 {
@@ -41,20 +53,28 @@ void callback(const sensor_msgs::ImageConstPtr& original_image)
 
     // Apply blur and HSV filter
     cv::Mat img_mask, img_hsv;
+    cv::Mat erosion_element = getStructuringElement(erosion_type,	\
+      cv::Size(2*erosion_size + 1, 2*erosion_size+1), \
+      cv::Point(erosion_size, erosion_size));
+    cv::Mat dilation_element = getStructuringElement( dilation_type, \
+      cv::Size(2*dilation_size + 1, 2*dilation_size+1), \
+      cv::Point(dilation_size, dilation_size));
     std::vector<std::vector<cv::Point> > contours;
     std::vector<cv::Vec4i> hierarchy;
     cv::medianBlur(cv_ptr->image, cv_ptr->image, blur*2+1);
     cv::cvtColor(cv_ptr->image, img_hsv, CV_BGR2HSV);
     cv::inRange(img_hsv, cv::Scalar(lowerH, lowerS, lowerV), \
 		cv::Scalar(upperH, upperS, upperV), img_mask);
+    cv::erode(img_mask, img_mask, erosion_element);
+    cv::dilate(img_mask, img_mask, dilation_element);
     cv::imshow(filtered_window, img_mask);
     
     // Find contours
     cv::findContours(img_mask, contours, hierarchy, cv::RETR_TREE, \
-		     cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+      cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
 
-    std::vector<int8_t> cone_pos;
-    std_msgs::Int8MultiArray cone_pos_msg;
+    std::vector<int16_t> cone_pos;
+    std_msgs::Int16MultiArray cone_pos_msg;
     std::vector<std::vector<cv::Point> > contours_poly( contours.size() );
     std::vector<cv::Rect> boundRect(contours.size());
     cv::Scalar color = cv::Scalar(255, 0, 0);
@@ -78,13 +98,13 @@ void callback(const sensor_msgs::ImageConstPtr& original_image)
 	cv::rectangle(cv_ptr->image, curr_cone.tl(), curr_cone.br(), \
 		    color, 1, 8, 0 );
 	// Push cone attributes to vector of all cone attributes
-	cone_pos.push_back(curr_cone.x);
-	cone_pos.push_back(curr_cone.y);
+	cone_pos.push_back(curr_cone.x+curr_cone.width/2);
+	cone_pos.push_back(curr_cone.y+curr_cone.height/2);
 	cone_pos.push_back(curr_cone.width);
 	cone_pos.push_back(curr_cone.height);
 	// Label cones with text
 	cv::putText(cv_ptr->image, "CONE", curr_cone.tl(), \
-		    cv::FONT_HERSHEY_PLAIN, 1.0, CV_RGB(0, 0, 255), 1.0);
+	  cv::FONT_HERSHEY_PLAIN, 1.0, CV_RGB(0, 0, 255), 1.0);
       }
     }
 
@@ -102,7 +122,7 @@ int main(int argc, char **argv)
 
     ros::NodeHandle nh;
 
-    pub = nh.advertise<std_msgs::Int8MultiArray>("cone_positions", 1000);
+    pub = nh.advertise<std_msgs::Int16MultiArray>("cone_positions", 1000);
 
     image_transport::ImageTransport it(nh);
 
@@ -112,13 +132,17 @@ int main(int argc, char **argv)
 
     // Create filter control window
     cv::namedWindow(control_window);
-    cv::createTrackbar("blur", control_window, &blur, 10, NULL);
+    cv::createTrackbar("blur", control_window, &blur, 50, NULL);
     cv::createTrackbar("lowerH", control_window, &lowerH, 180, NULL);
     cv::createTrackbar("upperH", control_window, &upperH, 180, NULL);
     cv::createTrackbar("lowerS", control_window, &lowerS, 256, NULL);
     cv::createTrackbar("upperS", control_window, &upperS, 256, NULL);
     cv::createTrackbar("lowerV", control_window, &lowerV, 256, NULL);
     cv::createTrackbar("upperV", control_window, &upperV, 256, NULL);
+    cv::createTrackbar("erosion_size", control_window, &erosion_size, \
+      50, NULL);
+    cv::createTrackbar("dilation_sizie", control_window, &dilation_size, \
+      50, NULL);
 
     ros::spin();
 }
