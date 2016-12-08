@@ -141,7 +141,7 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
     else
     {
       //ROS_INFO("+2");
-      ang_vel = 0;
+      ang_vel = 10;
     }
 
     // Set the wall_vel_command slider for the given ang_vel
