@@ -29,8 +29,8 @@ int rolling_length = 5;
 std::vector<int> cone_vel_command(202,0);
 
 // Object weights that get passed to the arbiter
-const int WALL = 1;
-const int CONE = 2;
+const int WALL = 2;
+const int CONE = 3;
 
 // input ang from -50 to 50
 std::vector<int> set_vel_vector(int object_weight, int ang)
@@ -120,19 +120,19 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
       //ang_vel -= 3;
       ang_vel = -10;
     }
-    else if(rolling_average_range < 1.2)
+    else if(rolling_average_range < .8)
     {
       //ROS_INFO("-1");
       //ang_vel -= 1;
       ang_vel = -5;
     }
-    else if(rolling_average_range < 1.5)
+    else if(rolling_average_range < 1)
     {
       //ROS_INFO("00");
       //ang_vel += 1;
       ang_vel = 0;
     }
-    else if(rolling_average_range < 1.65)
+    else if(rolling_average_range < 1.2)
     {
       //ROS_INFO("+1");
       //ang_vel += 5;
@@ -141,12 +141,13 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
     else
     {
       //ROS_INFO("+2");
-      ang_vel = 10;
+      ang_vel = 5;
     }
 
     // Set the wall_vel_command slider for the given ang_vel
     wall_vel_command = set_vel_vector(WALL, ang_vel);
-    //ROS_INFO("Wall ang_vel: %d", ang_vel);
+    ROS_INFO("Wall range: %f", rolling_average_range);
+    ROS_INFO("Wall ang_vel: %d", ang_vel);
 
     // Add wall and cone velocity sliders
     for (int i=0; i<wall_vel_command.size(); i++)
@@ -196,17 +197,31 @@ void cone_callback(const std_msgs::Int16MultiArray cone_array)
   {
     //Do we need to turn right away from a cone?
     if(cone_xs[i] > left_threshold && cone_xs[i] < 320)
+    {
       //ang_vel = -10;
       ang_vel -= 10;
+      ROS_INFO("CONE ON LEFT");
+    }
     //Do we need to turn left away from a cone?
-    else if(cone_xs[i] > 320 && cone_xs[i] < right_threshold)      
+    else if(cone_xs[i] > 320 && cone_xs[i] < right_threshold)
+    {      
       //ang_vel = 10;
       ang_vel += 10;
+      ROS_INFO("CONE ON RIGHT");
+    }
   }
 
   // Define the cone_vel_command slider based on given ang_vel
-  cone_vel_command = set_vel_vector(CONE, ang_vel);
-  ROS_INFO("Cone ang_vel: %d", ang_vel);
+  if (ang_vel != 0)
+  {
+    cone_vel_command = set_vel_vector(CONE, ang_vel);
+  }
+  else
+  {
+    cone_vel_command = set_vel_vector(0, ang_vel);
+  }
+ROS_INFO("Cone ang_vel: %d", ang_vel);
+
 }
 
 int main(int argc, char **argv)
