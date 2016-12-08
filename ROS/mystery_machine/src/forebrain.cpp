@@ -62,11 +62,19 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
 
   float rolling_average_range;
 
+  int inf_count = 0;
+
   // Remove junk values from scan data (0.0 is out of range or no read)
   for(int i=0; i < number_of_ranges; i++)
   {
-    if(filtered_scan.ranges[i] < filtered_scan.range_min || filtered_scan.ranges[i] > filtered_scan.range_max)
-        filtered_scan.ranges[i] = 0.0;
+    if(filtered_scan.ranges[i] < filtered_scan.range_min)
+    {
+	filtered_scan.ranges[i] = 0.0;
+    }
+    else if(filtered_scan.ranges[i] > filtered_scan.range_max)
+    {
+	filtered_scan.ranges[i] = 5.0;
+    }
   }
 
     for(int i = 0; i < number_of_ranges/6; i++)
@@ -75,13 +83,18 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
     }
 
     int distances_counted = 0;
-
-    for(float i = number_of_ranges/6+42; i < number_of_ranges / 4+42; i++)
-    {
+    //ROS_INFO("SCAN DATA START");
+    for(float i = 85; i < 105; i++)
+    {	
+	//ROS_INFO("Scan %f", filtered_scan.ranges[i]);
         if(!isnan(filtered_scan.ranges[i])) {
             average_range += filtered_scan.ranges[i];
             distances_counted++;
         }
+	if(filtered_scan.ranges[i] > 4.8)
+	{
+	    inf_count++;
+	}
     }
     
     for(float i = number_of_ranges/4; i < number_of_ranges; i++)
@@ -107,41 +120,48 @@ void getLIDAR(const sensor_msgs::LaserScan lidar_scan)
 
     //ROS_INFO("average_range: %f", average_range);
     //ROS_INFO("rolling_average_range: %f", rolling_average_range);
-    
-    if(rolling_average_range < 0.5)
+
+    ROS_INFO("Inf count %i", inf_count);
+
+    if(inf_count > 2 && inf_count < 5)
+    {
+      ang_vel = -5;
+    } 
+    else if(rolling_average_range < 1.0)
     {
       //ROS_INFO("-3");
       //ang_vel -= 5;
-      ang_vel = -15;
+      ang_vel = -6;
     }
-    else if(rolling_average_range < 0.6)
+    else if(rolling_average_range < 2.1)
     {
       //ROS_INFO("-2");
       //ang_vel -= 3;
-      ang_vel = -10;
+      ang_vel = -4;
     }
-    else if(rolling_average_range < .8)
+    else if(rolling_average_range < 2.3)
     {
       //ROS_INFO("-1");
       //ang_vel -= 1;
-      ang_vel = -5;
+      ang_vel = -2;
     }
-    else if(rolling_average_range < 1)
+    else if(rolling_average_range < 2.5)
     {
       //ROS_INFO("00");
       //ang_vel += 1;
       ang_vel = 0;
     }
-    else if(rolling_average_range < 1.2)
+    else if(rolling_average_range < 2.7)
     {
       //ROS_INFO("+1");
       //ang_vel += 5;
-      ang_vel = 10;
+      ang_vel = 4;
     }
     else
     {
       //ROS_INFO("+2");
-      ang_vel = 5;
+      // Gentle left if we don't see a wall
+      ang_vel = 2;
     }
 
     // Set the wall_vel_command slider for the given ang_vel
@@ -237,7 +257,7 @@ int main(int argc, char **argv)
 
   ros::Subscriber sub_lidar = n.subscribe("scan",1000,getLIDAR);
 
-  ros::Subscriber sub_cones = n.subscribe("cone_positions",1000,cone_callback);
+  //ros::Subscriber sub_cones = n.subscribe("cone_positions",1000,cone_callback);
 
   pub_arb = n.advertise<std_msgs::Int8MultiArray>("wpt/cmd_vel", 1000);
 
