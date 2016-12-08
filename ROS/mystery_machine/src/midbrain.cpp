@@ -64,7 +64,7 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
   {
     // Move backward
     ROS_INFO("Backward");
-    lin_vel = -20;
+    lin_vel = -10;
   }
   else if (forward_distance < .6)
   {
@@ -76,10 +76,8 @@ void controlSpeed(const sensor_msgs::LaserScan lidar_scan)
   {
     // Move forward
     ROS_INFO("Forward");
-    lin_vel = 20;
+    lin_vel = 10;
   }
-
-  ROS_INFO_STREAM(lin_vel);
 
   // Define final_vel_command slider based on given lin_vel
   final_vel_command = set_vel_vector(WALL, lin_vel);
