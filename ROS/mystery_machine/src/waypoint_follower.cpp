@@ -27,13 +27,15 @@ int waypoint_status = 0;
 std_msgs::Float64 theta;
 ros::Publisher pub_theta;
 
-
+// GPS Callback
 void getGPS(const sensor_msgs::NavSatFix gps) 
 {
+  // Store gps data in global
   ROS_INFO("Received GPS Data");
   gps_pos = gps;
 }
 
+// Read in a text file with race 4 waypoints in order
 void readGoals()
 {
   std::ifstream file("race_goals.txt");
@@ -51,7 +53,7 @@ void readGoals()
   }
 }
 
-
+// Compass callback: Send angular velocity to forebrain
 void getCompass(const geometry_msgs::Vector3Stamped imu)
 {
   ROS_INFO("Received Compass Data");

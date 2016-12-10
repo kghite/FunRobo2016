@@ -1,5 +1,4 @@
 // Midbrain controller
-// Edited: 11/9/16
 // Take in LIDAR data on /scan
 // Output Int16MultArray on /obst/cmd_vel to turn toward waypoint set on /goal
 

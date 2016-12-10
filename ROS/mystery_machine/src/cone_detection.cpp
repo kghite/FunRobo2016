@@ -1,3 +1,7 @@
+// Cone detection using OpenCV
+// Take in camera data
+// Output Int8MultArray on /uber/cmd_vel to be taken in by forebrain
+
 #include <string>
 #include <vector>
 #include <ros/ros.h>
@@ -14,15 +18,6 @@ ros::Publisher pub;
 static const std::string raw_window = "Raw";
 static const std::string filtered_window = "Filtered";
 static const std::string contoured_window = "Contoured";
-
-// Define initial filter parameters
-// int blur = 3;
-// int lowerH = 0;
-// int upperH = 23;
-// int lowerS = 165;
-// int upperS = 256;
-// int lowerV = 203;
-// int upperV = 256;
 
 // Detecting cones indoors
 int blur = 3;
@@ -130,19 +125,5 @@ int main(int argc, char **argv)
 
     const std::string control_window = "Filter Controls";
 
-    // Create filter control window
-/*    cv::namedWindow(control_window);
-    cv::createTrackbar("blur", control_window, &blur, 50, NULL);
-    cv::createTrackbar("lowerH", control_window, &lowerH, 180, NULL);
-    cv::createTrackbar("upperH", control_window, &upperH, 180, NULL);
-    cv::createTrackbar("lowerS", control_window, &lowerS, 256, NULL);
-    cv::createTrackbar("upperS", control_window, &upperS, 256, NULL);
-    cv::createTrackbar("lowerV", control_window, &lowerV, 256, NULL);
-    cv::createTrackbar("upperV", control_window, &upperV, 256, NULL);
-    cv::createTrackbar("erosion_size", control_window, &erosion_size, \
-      50, NULL);
-    cv::createTrackbar("dilation_sizie", control_window, &dilation_size, \
-      50, NULL);
-*/
     ros::spin();
 }
