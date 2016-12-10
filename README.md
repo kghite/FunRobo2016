@@ -97,13 +97,13 @@ If the Arduino is running, it will listen for /cmd_vel.
 `rosrun rosserial_python serial_node.py /dev/ttyUSB0`
 
 ### Forebrain Controller
-We need to write a launch file for this probably
+rosrun myster_machine forebrain
 
 ### Midbrain Controller
-Same
+rosrun mystery_machine midbrain
 
 ### Hindbrain Controller
-Same
+rosrun mystery_machine arbiter.py
 
 ### HW 3 Demo
 
