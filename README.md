@@ -4,12 +4,15 @@ Code base for the Mystery Machine autonomous race vehicle
 ---
 
 ## Project Description
-TODO
+The mystery machine autonomous race vehicle was created to autonomously navigate around the Olin Oval while avoiding static and dynamic obstacles.
 
----
+Hardware Structure:
 
-## Connecting to the Robot
-TODO
+The mystery machine runs using an Odroid connected to an Arduino Mega to control motors, lights, and small emergency stop sensors and a powered usb hub connecting a suite of sensors including a LIDAR, camera, gps, and IMU.
+
+Software Structure:
+
+The software structure consists of three parts.  The hindbrain runs on the Arduino and controls immediate reaction to fast inputs such as perimeter sonar to allow emergency stopping before running into an unexpected obstacle and motor control.  Communicating with the Arduino using rosserial, the Odroid runs the ROS midbrain and forebrain.  The midbrain controls forward and backward motion, while the forebrain controls turning.  These values are sent over command velocity topics to a python arbiter script that chooses the most highly rated output command from the topics.  This is sent to the Arduino as the final velocity output.
 
 ---
 
@@ -18,7 +21,7 @@ There is a scripts folder in the mystery_machine package that contains scripts t
 
 Current Functional Scripts:
 
-* port_setup.sh - Rename ports for consistent launch files
+* ports.sh - List all of the sensor port names to edit the launch files
 * sensor_data_log.sh - Create a bag file with all topics
 * telop_mode.sh - Run the robot with the following key layout:
 
@@ -28,6 +31,7 @@ J	K 	L
 	,
 
 ```
+* race1-3.sh - Run the sensor and control nodes to autonomously race around the O
 
 The following sections also detail running individual packages or sensor feeds from terminal.
 
